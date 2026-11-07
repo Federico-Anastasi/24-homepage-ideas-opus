@@ -1,0 +1,120 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 02 · Risograph: three-ink print (fluorescent pink, blue, yellow) on white paper. The four projects are printed shapes
+     that overlap and multiply; grain, halftone and a slight misregistration like a real riso print. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Work+Sans:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #ff48b0;   /* Fluorescent Pink */
+    --blue: #0078bf;   /* Riso Blue */
+    --yellow: #ffe800; /* Riso Yellow */
+    --pad: clamp(14px, 4.6vw, 22px);
+    --display: "Dela Gothic One", "Arial Black", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #fff; }
+  body { font-family: "Work Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; color: var(--blue); }
+
+  main {
+    position: relative; height: 100svh; max-width: 480px; margin: 0 auto;
+    display: grid; grid-template-rows: auto 1fr;
+    padding: max(var(--pad), env(safe-area-inset-top)) var(--pad) max(var(--pad), env(safe-area-inset-bottom));
+    isolation: isolate;
+  }
+
+  /* The title in blue, with the pink plate slightly off register */
+  h1 {
+    position: relative; font-family: var(--display); font-weight: 400;
+    font-size: min(11.4vw, 6.6svh, 54px); line-height: 1.02; letter-spacing: -.01em; color: var(--blue);
+  }
+  h1::before {
+    content: attr(data-t); position: absolute; inset: 0; color: var(--pink);
+    mix-blend-mode: multiply; transform: translate(2.5px, 1.5px); z-index: -1;
+  }
+
+  /* The shapes: placed by hand, touching and overlapping */
+  .stage { position: relative; margin-top: clamp(12px, 2.4svh, 22px); }
+  .shape {
+    position: absolute; display: flex; flex-direction: column; justify-content: flex-end;
+    text-decoration: none; mix-blend-mode: multiply; padding: 16px;
+    transition: transform .12s ease;
+  }
+  .shape:active { transform: translate(2px, 2px); }
+  .shape:focus-visible { outline: 3px dashed var(--blue); outline-offset: 3px; }
+  .name { font-family: var(--display); font-size: clamp(20px, 6.2vw, 28px); line-height: 1; }
+  .say { margin-top: 5px; font-weight: 700; font-size: clamp(12px, 3.5vw, 14px); line-height: 1.15; }
+  .ico { width: clamp(34px, 10vw, 44px); height: clamp(34px, 10vw, 44px); border-radius: 50%; object-fit: contain; filter: grayscale(1) contrast(1.6) brightness(.9); mix-blend-mode: multiply; margin-bottom: auto; }
+
+  /* Project one: a large pink disc, knocked-out text (the paper stays white) */
+  .one { left: 0; top: 0; width: 63%; aspect-ratio: 1; border-radius: 50%; background: var(--pink); color: #fff; align-items: center; justify-content: center; text-align: center; mix-blend-mode: multiply; }
+  .one .name, .one .say { mix-blend-mode: normal; text-shadow: 1.5px 1px 0 var(--blue); }
+  .one .ico { margin: 0 0 8px; }
+
+  /* Project two: a yellow sheet, slightly crooked */
+  .anim { right: 0; top: 5%; width: 49%; height: 45%; background: var(--yellow); color: var(--blue); transform: rotate(-3.5deg); }
+  .anim:active { transform: rotate(-3.5deg) translate(2px, 2px); }
+
+  /* Project three: a blue block with halftone */
+  .code {
+    left: 3%; bottom: 0; width: 53%; height: 45%; color: #fff; background: var(--blue);
+  }
+  .code::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(circle, var(--pink) 0 1.4px, transparent 1.6px) 0 0 / 8px 8px;
+    mix-blend-mode: multiply; opacity: .55;
+    -webkit-mask: linear-gradient(160deg, #000, transparent 70%); mask: linear-gradient(160deg, #000, transparent 70%);
+  }
+
+  /* Project four: a yellow half disc printed over pink halftone */
+  .four {
+    right: 0; bottom: 0; width: 60%; height: 36%; border-radius: 999px 999px 0 0; color: var(--blue);
+    align-items: flex-end; text-align: right; padding: 0 16px 16px;
+    background:
+      radial-gradient(circle, var(--pink) 0 2.1px, transparent 2.3px) 0 0 / 9px 9px,
+      var(--yellow);
+  }
+  .four .ico { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); margin: 0; }
+
+  /* Paper and ink grain, over everything */
+  main::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5; opacity: .32; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -1.6 1.15'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1 data-t="Your open space by First Last">Your open space by First Last</h1>
+  <div class="stage">
+    <a class="shape one" href="#project-1">
+      <img class="ico" src="../assets/project-1.svg" alt="">
+      <span class="name">Project one</span><span class="say">a short line</span>
+    </a>
+    <a class="shape anim" href="#project-2">
+      <img class="ico" src="../assets/project-2.svg" alt="">
+      <span class="name">Project two</span><span class="say">a short line</span>
+    </a>
+    <a class="shape code" href="#project-3">
+      <img class="ico" src="../assets/project-3.svg" alt="" style="filter:grayscale(1) brightness(3);mix-blend-mode:screen">
+      <span class="name">Project three</span><span class="say">a short line</span>
+    </a>
+    <a class="shape four" href="#project-4">
+      <img class="ico" src="../assets/project-4.svg" alt="">
+      <span class="name">Project four</span><span class="say">a short line</span>
+    </a>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>24 home page: template aperti</title>
+<style>
+  body { margin: 0; background: #1c1c1f; color: #eee; font: 500 14px/1.4 system-ui, -apple-system, sans-serif; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, 393px); gap: 40px 32px; justify-content: center; padding: 32px 20px 80px; }
+  figure { margin: 0; }
+  figcaption { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  figcaption a { color: #ffb21e; text-decoration: none; }
+  .phone { width: 393px; height: 659px; border-radius: 38px; overflow: hidden; background: #000; box-shadow: 0 0 0 8px #0b0b0c, 0 0 0 9px #333; }
+  iframe { width: 393px; height: 659px; border: 0; display: block; }
+  /* Sul telefono: un elenco da toccare, ogni versione si apre a tutto schermo */
+  @media (max-width: 600px) {
+    .grid { display: block; padding: 16px; }
+    figure { margin: 0 0 4px; }
+    .phone { display: none; }
+    figcaption { margin: 0; padding: 14px 4px; border-bottom: 1px solid #333; font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<script>
+const V = [
+  "01-manifesto", "02-risograph", "03-bauhaus", "04-carta",
+  "05-aurora", "06-grana-calda", "07-liquido", "08-campo",
+  "09-cromo-liquido", "10-alluminio", "11-ottone", "12-titolo-cromato",
+  "13-insegne", "14-olografico", "15-vetro-acidato", "16-oscilloscopio",
+  "17-terminale", "18-led", "19-solari", "20-televideo",
+  "21-oggetti", "22-diorama", "23-particelle", "24-acrilico",
+];
+const grid = document.getElementById("grid");
+for (const v of V) {
+  const name = v.replace(/^\d+-/, "").replace(/-/g, " ");
+  grid.insertAdjacentHTML("beforeend",
+    `<figure><figcaption><span>${v.slice(0, 2)} · ${name}</span><a href="template/${v}.html" target="_blank">apri ↗</a></figcaption>
+     <div class="phone"><iframe data-src="template/${v}.html" title="${name}"></iframe></div></figure>`);
+}
+// Carica solo le versioni vicine allo schermo e scarica le altre: il browser regge poche scene 3D insieme.
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    const f = e.target;
+    if (e.isIntersecting) { if (!f.src || f.src === "about:blank") f.src = f.dataset.src; }
+    else if (f.src && f.src !== "about:blank") f.src = "about:blank";
+  }
+}, { rootMargin: "300px 0px" });
+if (innerWidth > 600) document.querySelectorAll("iframe").forEach((f) => io.observe(f));
+</script>
+</body>
+</html>

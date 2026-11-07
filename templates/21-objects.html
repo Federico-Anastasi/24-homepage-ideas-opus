@@ -1,0 +1,368 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address); the 3D objects are in the script, one per project.
+     Icons: ../assets/project-1.svg and project-4.svg are pasted on two of the 3D objects; the other two use no images.
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 21 · Four objects — four glossy 3D objects, one per project, floating in a blue studio with real reflections;
+     touch one and it turns toward you before the page opens. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3f62a6">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Familjen+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; color: #fff; -webkit-tap-highlight-color: transparent; }
+  body {
+    background:
+      radial-gradient(90% 55% at 50% 22%, rgba(150, 185, 245, .55) 0%, rgba(150, 185, 245, 0) 70%),
+      radial-gradient(130% 90% at 50% 30%, #4a6db2 0%, #2a4a8a 45%, #142753 80%, #0c1838 100%);
+    background-color: #142753;
+  }
+  #stage { position: fixed; top: 0; bottom: 0; left: 50%; width: min(100vw, 480px); transform: translateX(-50%); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  h1 {
+    position: absolute; z-index: 2; left: 24px; right: 24px; top: max(26px, calc(env(safe-area-inset-top) + 14px)); margin: 0;
+    font: 400 clamp(31px, 9.2vw, 41px)/1 Gloock, Georgia, serif; letter-spacing: -.012em;
+    text-shadow: 0 2px 24px rgba(6, 14, 40, .35);
+  }
+  h1 span { display: block; margin-top: .3em; font-size: .6em; color: #d3def5; }
+  .hit {
+    position: absolute; z-index: 3; left: 0; top: 0; border-radius: 50%;
+    color: #fff; text-decoration: none; transform: translate(-50%, -50%); min-width: 44px; min-height: 44px;
+  }
+  .hit:focus-visible { outline: 2px solid #ffb21e; outline-offset: 6px; }
+  .lab {
+    position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 10px; padding: 4px 8px;
+    text-align: center; white-space: nowrap; font-family: "Familjen Grotesk", system-ui, sans-serif;
+    text-shadow: 0 1px 10px rgba(6, 14, 40, .45);
+  }
+  .lab b { display: block; font-size: 17px; font-weight: 700; letter-spacing: -.005em; }
+  .lab i { display: block; font-style: normal; font-size: 14px; font-weight: 500; color: #cbd8f1; margin-top: 2px; }
+  .hit:active .lab b { color: #ffcf6e; }
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 4; opacity: .09; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c" aria-hidden="true"></canvas>
+  <h1>Your open space <span>by First Last</span></h1>
+  <a class="hit" href="#project-1" data-slug="one"><span class="lab"><b>Project one</b><i>a short line</i></span></a>
+  <a class="hit" href="#project-2" data-slug="two"><span class="lab"><b>Project two</b><i>a short line</i></span></a>
+  <a class="hit" href="#project-3" data-slug="three"><span class="lab"><b>Project three</b><i>a short line</i></span></a>
+  <a class="hit" href="#project-4" data-slug="four"><span class="lab"><b>Project four</b><i>a short line</i></span></a>
+</div>
+<div class="grain"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const IMG = "../assets/";
+  const stage = document.getElementById("stage");
+  const canvas = document.getElementById("c");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+
+  // A procedural photo studio: light panels inside a room, for believable reflections.
+  function studioEnvironment() {
+    const env = new THREE.Scene();
+    env.add(new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), new THREE.MeshBasicMaterial({ color: 0x24375f, side: THREE.BackSide })));
+    const panel = (w, h, pos, rot, color, k) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(k), side: THREE.DoubleSide }));
+      m.position.set(...pos); m.rotation.set(...rot); env.add(m);
+    };
+    panel(7, 2.2, [0, 5.8, 0], [Math.PI / 2, 0, 0], "#ffffff", 4.5);      // softbox on top
+    panel(2.6, 5, [-5.8, 1, 1], [0, Math.PI / 2, 0], "#ffe0bd", 3.2);      // warm light on the left
+    panel(2, 4, [5.8, 0.5, -1], [0, -Math.PI / 2, 0], "#bcd3ff", 2.2);     // cool light on the right
+    panel(6, 1.2, [0, -1.5, 5.8], [0, Math.PI, 0], "#8fb0ff", 1.2);        // low reflection in front
+    panel(12, 12, [0, -5.9, 0], [-Math.PI / 2, 0, 0], "#0b1530", 1);       // dark floor
+    const pm = new THREE.PMREMGenerator(renderer);
+    const tex = pm.fromScene(env, 0.035).texture;
+    pm.dispose();
+    return tex;
+  }
+  scene.environment = studioEnvironment();
+
+  scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x16224a, 0.55));
+  const key = new THREE.DirectionalLight(0xfff0dc, 1.7); key.position.set(-3, 5, 5); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xa9c6ff, 1.2); rim.position.set(4, 2.5, -4); scene.add(rim);
+
+  const world = new THREE.Group();
+  scene.add(world);
+
+  // ---------- Geometrie ----------
+  function roundedRect(w, h, r) {
+    const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+    s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+    s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+    s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+    return s;
+  }
+  function slab(w, h, r, depth, bevel) {
+    const g = new THREE.ExtrudeGeometry(roundedRect(w, h, r), {
+      depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 10, curveSegments: 28,
+    });
+    g.center(); g.computeVertexNormals();
+    return g;
+  }
+  const texLoader = new THREE.TextureLoader();
+  const loadImg = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+
+  function shadowTexture() {
+    const c = document.createElement("canvas"); c.width = c.height = 128;
+    const g = c.getContext("2d");
+    const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, "rgba(5,10,30,.85)"); grd.addColorStop(.45, "rgba(5,10,30,.35)"); grd.addColorStop(1, "rgba(5,10,30,0)");
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }
+  const shadowTex = shadowTexture();
+
+  // ---------- The four objects ----------
+  const items = [];
+  function addItem(slug, object, radius) {
+    const holder = new THREE.Group();
+    holder.add(object);
+    world.add(holder);
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.42),
+      new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, opacity: .6 }));
+    world.add(shadow);
+    const item = {
+      slug, holder, object, shadow, radius, base: new THREE.Vector3(),
+      phase: Math.random() * Math.PI * 2, spin: 0, spinFrom: 0, tapAt: -1, el: document.querySelector(`[data-slug="${slug}"]`),
+    };
+    holder.position.copy(item.base);
+    items.push(item);
+    return item;
+  }
+
+  // Project one: a terracotta glazed sphere with the icon as a decal.
+  (function one() {
+    const c = document.createElement("canvas"); c.width = 1024; c.height = 512;
+    const g = c.getContext("2d");
+    g.fillStyle = "#c4553c"; g.fillRect(0, 0, 1024, 512);
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+    loadImg(IMG + "project-1.svg").then((img) => {
+      if (!img) return;
+      // the front of the sphere (facing the camera) is at u = 0.25
+      const cx = 256, cy = 256, s = 230;
+      g.fillStyle = "#f6efe4"; g.beginPath(); g.arc(cx, cy, s / 2 + 9, 0, Math.PI * 2); g.fill();
+      g.save(); g.beginPath(); g.arc(cx, cy, s / 2, 0, Math.PI * 2); g.clip(); g.drawImage(img, cx - s / 2, cy - s / 2, s, s); g.restore();
+      tex.needsUpdate = true; kick();
+    });
+    const mat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: .22, metalness: 0, clearcoat: 1, clearcoatRoughness: .06 });
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 72, 48), mat);
+    addItem("one", m, 0.6);
+  })();
+
+  // Project two: an orange glass ellipsoid with an embedded triangle.
+  (function two() {
+    const geo = new THREE.SphereGeometry(0.55, 72, 52);
+    const p = geo.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i);
+      v.y *= 1.14; v.x *= 0.97; v.z *= 0.9;
+      p.setXYZ(i, v.x, v.y, v.z);
+    }
+    geo.computeVertexNormals();
+    const glass = new THREE.MeshPhysicalMaterial({
+      color: 0xff9a1c, roughness: .08, metalness: 0, clearcoat: 1, clearcoatRoughness: .03,
+      emissive: 0xb53d00, emissiveIntensity: .22, reflectivity: .6,
+    });
+    const body = new THREE.Mesh(geo, glass);
+    body.rotation.z = -0.35;
+    const tri = new THREE.Shape();
+    tri.moveTo(-0.11, -0.15); tri.lineTo(0.17, 0); tri.lineTo(-0.11, 0.15); tri.lineTo(-0.11, -0.15);
+    const triGeo = new THREE.ExtrudeGeometry(tri, { depth: 0.04, bevelEnabled: true, bevelThickness: .02, bevelSize: .022, bevelSegments: 5 });
+    triGeo.center();
+    const play = new THREE.Mesh(triGeo, new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .18, clearcoat: 1 }));
+    play.position.set(0.02, 0, 0.49);
+    const g = new THREE.Group(); g.add(body, play);
+    addItem("two", g, 0.62);
+  })();
+
+  // Project three: a midnight-blue resin block with orange lines inside.
+  (function code() {
+    const g = new THREE.Group();
+    const widths = [150, 182, 128, 170, 182, 112, 160, 182, 140, 120];
+    const stops = [new THREE.Color("#FFD84A"), new THREE.Color("#FFA61F"), new THREE.Color("#F0532B")];
+    widths.forEach((w, i) => {
+      const len = w / 182 * 0.74, t = i / (widths.length - 1);
+      const col = t < .5 ? stops[0].clone().lerp(stops[1], t * 2) : stops[1].clone().lerp(stops[2], (t - .5) * 2);
+      const bar = new THREE.Mesh(slab(len, 0.058, 0.028, 0.03, 0.008), new THREE.MeshBasicMaterial({ color: col, toneMapped: false }));
+      bar.position.set(-0.37 + len / 2, 0.45 - i * 0.1, 0);
+      g.add(bar);
+    });
+    const resin = new THREE.Mesh(slab(0.98, 1.12, 0.16, 0.36, 0.09), new THREE.MeshPhysicalMaterial({
+      color: 0x1b2c55, roughness: .04, metalness: 0, clearcoat: 1, clearcoatRoughness: .02,
+      transparent: true, opacity: .62, depthWrite: false,
+    }));
+    resin.renderOrder = 2;
+    g.add(resin);
+    addItem("three", g, 0.64);
+  })();
+
+  // Project four: a pink pebble-shaped phone with text on the screen.
+  (function four() {
+    const g = new THREE.Group();
+    const shell = new THREE.Mesh(slab(0.74, 1.24, 0.3, 0.12, 0.11), new THREE.MeshPhysicalMaterial({
+      color: 0xff5fa2, roughness: .26, metalness: 0, clearcoat: 1, clearcoatRoughness: .05,
+    }));
+    g.add(shell);
+    const c = document.createElement("canvas"); c.width = 360; c.height = 640;
+    const x = c.getContext("2d");
+    const paint = (img) => {
+      const grd = x.createLinearGradient(0, 0, 0, 640); grd.addColorStop(0, "#3a3f52"); grd.addColorStop(1, "#14161f");
+      x.fillStyle = grd; x.fillRect(0, 0, 360, 640);
+      if (img) { x.save(); x.beginPath(); x.arc(180, 270, 120, 0, Math.PI * 2); x.clip(); x.drawImage(img, 60, 150, 240, 240); x.restore(); }
+      x.fillStyle = "#fff"; x.font = "600 30px system-ui, -apple-system, sans-serif"; x.fillText("Your text here", 46, 520);
+    };
+    paint(null);
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    loadImg(IMG + "project-4.svg").then((img) => { paint(img); tex.needsUpdate = true; kick(); });
+    const screen = new THREE.Mesh(new THREE.ShapeGeometry(roundedRect(0.6, 1.07, 0.2), 24), new THREE.MeshPhysicalMaterial({
+      map: tex, roughness: .05, clearcoat: 1, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .55,
+    }));
+    // ShapeGeometry UVs: from coordinates to 0..1
+    const uv = screen.geometry.attributes.uv, pos = screen.geometry.attributes.position;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, pos.getX(i) / 0.6 + .5, pos.getY(i) / 1.07 + .5);
+    screen.position.z = 0.172;
+    g.add(screen);
+    addItem("four", g, 0.66);
+  })();
+
+  // ---------- Layout ----------
+  let W = 1, H = 1, contentTopY = 0;
+  const lookAt = new THREE.Vector3();
+  function layout() {
+    W = stage.clientWidth; H = stage.clientHeight;
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H;
+    const k = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const titleFrac = Math.min(.36, (document.querySelector("h1").getBoundingClientRect().bottom + 18) / H);
+    const needW = 3.55, needH = 3.95;                       // two columns and two rows, labels included
+    const d = Math.max(needW / (k * camera.aspect), needH / ((1 - titleFrac - .03) * k));
+    const visH = d * k;
+    const gapX = Math.min(0.98, needW / 2 - 0.78);
+    const rowTop = 0.78, rowBottom = -1.22;
+    const pos = [[-gapX, rowTop], [gapX, rowTop], [-gapX, rowBottom], [gapX, rowBottom]];
+    items.forEach((it, i) => { it.base.set(pos[i][0], pos[i][1], 0); });
+    // the center of the content sits halfway through the space under the title
+    const contentCenter = (rowTop + 0.66 + rowBottom - 0.66 - 0.55) / 2;
+    const fracCenter = titleFrac + (1 - titleFrac) / 2;
+    lookAt.set(0, contentCenter + (fracCenter - .5) * visH, 0);
+    camera.position.set(0, lookAt.y + d * Math.sin(0.12), d * Math.cos(0.12));
+    camera.lookAt(lookAt);
+    camera.updateProjectionMatrix();
+    kick();
+  }
+
+  // ---------- Motion ----------
+  const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+  addEventListener("pointermove", (e) => {
+    const r = stage.getBoundingClientRect();
+    pointer.tx = ((e.clientX - r.left) / r.width) * 2 - 1;
+    pointer.ty = ((e.clientY - r.top) / r.height) * 2 - 1;
+  }, { passive: true });
+
+  let t = 0;
+  const v3 = new THREE.Vector3(), right = new THREE.Vector3();
+  function update(dt) {
+    t += dt;
+    pointer.x += (pointer.tx - pointer.x) * Math.min(1, dt * 3);
+    pointer.y += (pointer.ty - pointer.y) * Math.min(1, dt * 3);
+    world.rotation.y = pointer.x * 0.22;
+    world.rotation.x = pointer.y * 0.08;
+    const now = performance.now();
+    for (const it of items) {
+      // soft physics: a spring toward a height that breathes
+      const ty = it.base.y + Math.sin(t * 0.9 + it.phase) * 0.075;
+      const tx = it.base.x + Math.sin(t * 0.55 + it.phase * 1.7) * 0.025;
+      const follow = 1 - Math.pow(0.02, dt);          // damped spring, no bouncing
+      it.holder.position.x += (tx - it.holder.position.x) * follow;
+      it.holder.position.y += (ty - it.holder.position.y) * follow;
+      it.holder.position.z = it.base.z;
+      let ry = Math.sin(t * 0.42 + it.phase) * 0.38, s = 1;
+      if (it.tapAt >= 0) {
+        const k = Math.min(1, (now - it.tapAt) / 650), e = 1 - Math.pow(1 - k, 3);
+        ry = it.spinFrom * (1 - e) + Math.PI * 2 * e;            // one full turn, ends facing you
+        s = 1 + Math.sin(k * Math.PI) * 0.12;
+      }
+      it.object.rotation.y = ry;
+      it.object.rotation.x = Math.sin(t * 0.37 + it.phase) * 0.08;
+      it.holder.scale.setScalar(s);
+      const lift = it.holder.position.y - it.base.y;
+      it.shadow.position.set(it.holder.position.x, it.base.y - 0.86, it.base.z - 0.2);
+      it.shadow.scale.setScalar(1 - lift * 0.9);
+      it.shadow.material.opacity = 0.5 - lift * 1.5;
+    }
+  }
+
+  // The HTML labels follow the objects (3D → screen projection).
+  function place() {
+    camera.updateMatrixWorld();
+    right.setFromMatrixColumn(camera.matrixWorld, 0);
+    for (const it of items) {
+      it.holder.getWorldPosition(v3);
+      const c = v3.clone().project(camera);
+      const e = v3.clone().addScaledVector(right, it.radius).project(camera);
+      const x = (c.x + 1) / 2 * W, y = (1 - c.y) / 2 * H;
+      const r = Math.abs(e.x - c.x) / 2 * W;
+      it.el.style.width = it.el.style.height = (r * 2.15) + "px";
+      it.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+    }
+  }
+
+  // Touch: the object spins toward you, then the page opens.
+  for (const it of items) {
+    it.el.addEventListener("click", (e) => {
+      if (reduce) return;
+      e.preventDefault();
+      if (it.tapAt >= 0) return;
+      it.spinFrom = it.object.rotation.y;
+      it.tapAt = performance.now();
+      setTimeout(() => { location.href = it.el.href; }, 640);
+      setTimeout(() => { it.tapAt = -1; }, 1400);
+    });
+  }
+
+  // ---------- Loop ----------
+  let raf = 0, last = 0;
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    update(dt); renderer.render(scene, camera); place();
+  }
+  function kick() {
+    if (reduce) { update(0); for (const it of items) it.holder.position.copy(it.base); renderer.render(scene, camera); place(); return; }
+    if (!raf && !document.hidden) { last = performance.now(); raf = requestAnimationFrame(frame); }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else kick();
+  });
+  addEventListener("resize", layout);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(layout);
+  layout();
+  for (const it of items) it.holder.position.copy(it.base);
+})();
+</script>
+</body>
+</html>

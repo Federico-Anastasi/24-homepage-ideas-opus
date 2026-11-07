@@ -1,0 +1,236 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title>, the <h1> and the two `text(...)` rows in `build()` of the script.
+     Projects: in the `ENTRIES` array (name, line, page number, address) and in `FAST` (coloured keys) of the script.
+     Icons: this version uses no images: the projects are text only.
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 20 · Teletext — teletext page 100, carefully remade: 40×25 grid, solid colors, double-height title,
+     the four projects with their page numbers (101–104) and the colored buttons at the bottom. Inside a TV screen. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; }
+  body { display: flex; justify-content: center; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  .tv {
+    position: relative; width: 100%; max-width: 480px; height: 100vh; height: 100dvh; background: #000; overflow: hidden;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .screen { position: absolute; inset: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #glow { filter: blur(2.5px); opacity: .55; mix-blend-mode: screen; }
+  /* tube scanlines, darker edges, a reflection on the glass */
+  .crt { position: absolute; inset: 0; pointer-events: none; }
+  .crt::before {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.26) 2px, rgba(0,0,0,.26) 3px);
+  }
+  .crt::after {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(140% 100% at 50% 50%, rgba(0,0,0,0) 62%, rgba(0,0,0,.55) 100%),
+      linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,0) 35%);
+  }
+  .hit { position: absolute; display: block; color: transparent; text-decoration: none; }
+  .hit:focus-visible { outline: 2px solid #ffff00; outline-offset: -2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: no-preference) {
+    .screen { animation: on .5s ease-out both; }
+    @keyframes on { 0% { transform: scaleY(.005) scaleX(.6); filter: brightness(3); } 55% { transform: scaleY(1) scaleX(1); filter: brightness(1.6); } 100% { transform: none; filter: none; } }
+  }
+</style>
+</head>
+<body>
+<main class="tv">
+  <h1 class="sr">Your open space by First Last</h1>
+  <div class="screen" id="screen">
+    <canvas id="tt" aria-hidden="true"></canvas>
+    <canvas id="glow" aria-hidden="true"></canvas>
+    <div class="crt"></div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const screen = document.getElementById("screen");
+  const cv = document.getElementById("tt"), gv = document.getElementById("glow");
+  const x = cv.getContext("2d"), g = gv.getContext("2d");
+
+  // The seven teletext colors, solid as on a real TV
+  const K = "#000000", R = "#ff1f1f", G = "#1fff3a", Y = "#ffff1f", B = "#1f2bff", M = "#ff1fff", C = "#1fffff", W = "#ffffff";
+  const COLS = 40, ROWS = 25;
+
+  const ENTRIES = [
+    { row: 8, name: "Project one", say: "a short line", num: "101", href: "#project-1", label: "Project one: a short line" },
+    { row: 12, name: "Project two", say: "a short line", num: "102", href: "#project-2", label: "Project two: a short line" },
+    { row: 16, name: "Project three", say: "a short line", num: "103", href: "#project-3", label: "Project three: a short line" },
+    { row: 20, name: "Project four", say: "a short line", num: "104", href: "#project-4", label: "Project four: a short line" },
+  ];
+  const FAST = [["One", R, 0], ["Two", G, 1], ["Three", Y, 2], ["Four", C, 3]];
+
+  let page, cw, ch, ox, oy, dpr, pressed = -1, shownRows = ROWS, searching = false;
+
+  const blank = () => ({ ch: " ", fg: W, bg: K, dh: 0, mo: 0 });
+  function build() {
+    page = Array.from({ length: ROWS }, () => Array.from({ length: COLS }, blank));
+    // the blue band with the double-height title
+    for (let r = 2; r <= 5; r++) for (let c = 0; c < COLS; c++) page[r][c].bg = B;
+    text(2, 2, "Your open space", Y, true);
+    text(4, 2, "by First Last", W, true);
+    sfera(26, 2);
+    // the mosaic row under the band
+    [R, Y, C, M].forEach((col, i) => { for (let c = i * 10; c < i * 10 + 10; c++) page[6][c] = { ch: " ", fg: col, bg: K, dh: 0, mo: 0b000011 | (c % 2 ? 0 : 0b001100) }; });
+    ENTRIES.forEach((e, i) => {
+      const on = pressed === i;
+      if (on) for (let r = e.row; r < e.row + 3; r++) for (let c = 0; c < COLS; c++) page[r][c].bg = C;
+      text(e.row, 1, e.name, on ? K : W, true);
+      for (let c = e.name.length + 2; c < 35; c++) page[e.row + 1][c] = { ch: ".", fg: on ? K : C, bg: on ? C : K, dh: 0, mo: 0 };
+      text(e.row, 36, e.num, on ? B : Y, true);
+      text(e.row + 2, 3, e.say, on ? K : M);
+    });
+    FAST.forEach(([label, col, i]) => text(24, i * 10 + 1, label, col));
+    header(new Date());
+  }
+  function text(r, c, s, fg, dh = false) {
+    [...s].forEach((chr, i) => {
+      const cell = page[r][c + i];
+      if (!cell) return;
+      cell.ch = chr; cell.fg = fg; cell.dh = dh ? 1 : 0;
+      if (dh && page[r + 1]) { page[r + 1][c + i].dh = 2; page[r + 1][c + i].ch = " "; }
+    });
+  }
+  // A mosaic sphere: a round disc, yellow shading to red at the bottom right.
+  function sfera(c0, r0) {
+    const wS = 22, hS = 12, cx = 10.5, cy = 6, rx = 8.6, ry = 5.4;
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 11; c++) {
+      let bits = 0, red = 0, n = 0;
+      for (let sy = 0; sy < 3; sy++) for (let sx = 0; sx < 2; sx++) {
+        const px = c * 2 + sx + .5, py = r * 3 + sy + .5;
+        const dx = (px - cx) / rx, dy = (py - cy) / ry;
+        const tilt = dx * .85 + dy * .5;
+        if (dx * dx + dy * dy <= 1 && px < wS && py < hS) { bits |= 1 << (sy * 2 + sx); n++; if (tilt > .35) red++; }
+      }
+      if (!bits) continue;
+      const cell = page[r0 + r][c0 + c];
+      if (!cell) continue;
+      cell.mo = bits; cell.fg = red * 2 > n ? R : Y; cell.ch = " ";
+    }
+  }
+  function header(d) {
+    for (let c = 0; c < COLS; c++) page[0][c] = blank();
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const p2 = (n) => String(n).padStart(2, "0");
+    text(0, 1, "P100", W);
+    if (searching) text(0, 7, "1" + p2(Math.floor(Math.random() * 90) + 10) + "        ", G);
+    else text(0, 7, "YOUR SPACE", C);
+    text(0, 20, `${days[d.getDay()]} ${p2(d.getDate())} ${months[d.getMonth()]}`, W);
+    text(0, 31, `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`, Y);
+  }
+
+  function layout() {
+    // clientWidth/Height: the real size even while the TV turns on (scaled by the animation)
+    const r = { width: screen.clientWidth, height: screen.clientHeight };
+    dpr = Math.min(2, devicePixelRatio || 1);
+    for (const c of [cv, gv]) { c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); }
+    cw = r.width / COLS;
+    ch = Math.min(cw * 2.05, (r.height - 8) / ROWS);
+    ox = 0; oy = Math.max(0, (r.height - ch * ROWS) * .42);
+    placeLinks();
+  }
+
+  let fontPx = 0, adv = 1;
+  function draw() {
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.fillStyle = K; x.fillRect(0, 0, cv.width, cv.height);
+    fontPx = ch * 1.02;
+    x.font = `${fontPx}px VT323, monospace`;
+    adv = x.measureText("M").width || fontPx * .5;
+    const sx = cw / adv;
+    x.textAlign = "center"; x.textBaseline = "alphabetic";
+    // All backgrounds and mosaics first, then the text: so the bottom half of the double-height letters is not covered.
+    const visible = (r) => r < shownRows || r === 0;
+    for (let r = 0; r < ROWS; r++) {
+      if (!visible(r)) continue;
+      for (let c = 0; c < COLS; c++) {
+        const cell = page[r][c], X = ox + c * cw, Yy = oy + r * ch;
+        if (cell.bg !== K) { x.fillStyle = cell.bg; x.fillRect(X - .25, Yy - .25, cw + .5, ch + .5); }
+        if (cell.mo) {
+          x.fillStyle = cell.fg;
+          for (let sy = 0; sy < 3; sy++) for (let s2 = 0; s2 < 2; s2++) {
+            if (cell.mo & (1 << (sy * 2 + s2))) x.fillRect(X + s2 * cw / 2 - .2, Yy + sy * ch / 3 - .2, cw / 2 + .4, ch / 3 + .4);
+          }
+        }
+      }
+    }
+    for (let r = 0; r < ROWS; r++) {
+      if (!visible(r)) continue;
+      for (let c = 0; c < COLS; c++) {
+        const cell = page[r][c], X = ox + c * cw, Yy = oy + r * ch;
+        if (cell.mo || cell.ch === " " || cell.dh === 2) continue;
+        if (cell.dh === 1 && !visible(r + 1)) continue;
+        x.fillStyle = cell.fg;
+        x.save();
+        if (cell.dh === 1) { x.translate(X + cw / 2, Yy + ch * 1.66); x.scale(sx, 2); }
+        else { x.translate(X + cw / 2, Yy + ch * .83); x.scale(sx, 1); }
+        x.fillText(cell.ch, 0, 0);
+        x.restore();
+      }
+    }
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, gv.width, gv.height);
+    g.drawImage(cv, 0, 0);
+  }
+
+  // Touch areas over the canvas
+  const links = [];
+  ENTRIES.forEach((e, i) => {
+    const a = document.createElement("a");
+    a.className = "hit"; a.href = e.href; a.setAttribute("aria-label", e.label);
+    a.addEventListener("pointerdown", () => { pressed = i; build(); draw(); });
+    const up = () => { if (pressed === i) { pressed = -1; build(); draw(); } };
+    a.addEventListener("pointerup", up); a.addEventListener("pointercancel", up); a.addEventListener("pointerleave", up);
+    screen.append(a); links.push([a, e.row, 0, 3, COLS]);
+  });
+  FAST.forEach(([label, , i]) => {
+    const a = document.createElement("a");
+    a.className = "hit"; a.href = ENTRIES[i].href; a.setAttribute("aria-label", ENTRIES[i].label);
+    screen.append(a); links.push([a, 24, i * 10, 1, 10]);
+  });
+  function placeLinks() {
+    for (const [a, r, c, rows, cols] of links) {
+      const h = Math.max(44, rows * ch), top = oy + r * ch - (h - rows * ch) / 2;
+      Object.assign(a.style, { left: ox + c * cw + "px", top: top + "px", width: cols * cw + "px", height: h + "px" });
+    }
+  }
+
+  // Start: the TV searches for the page (the numbers scroll), then the page arrives row by row.
+  function start() {
+    layout(); build();
+    if (reduce) { draw(); setInterval(() => { header(new Date()); draw(); }, 1000); return; }
+    searching = true; shownRows = 1;
+    const search = setInterval(() => { header(new Date()); draw(); }, 70);
+    setTimeout(() => {
+      clearInterval(search); searching = false; header(new Date());
+      const rowTimer = setInterval(() => {
+        shownRows++; draw();
+        if (shownRows >= ROWS) clearInterval(rowTimer);
+      }, 32);
+    }, 650);
+    setInterval(() => { if (document.hidden || searching) return; header(new Date()); draw(); }, 1000);
+  }
+  let rt;
+  addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { layout(); draw(); }, 100); });
+  (document.fonts ? Promise.race([document.fonts.load("20px VT323"), new Promise((r) => setTimeout(r, 1500))]) : Promise.resolve()).then(start);
+})();
+</script>
+</body>
+</html>

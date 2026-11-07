@@ -1,0 +1,140 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 04 · Cut paper: a yellow sheet with four hand-cut windows; under each window sits a sheet of
+     another color, at different depths. Real thickness shadows, paper grain, and a slight parallax following the finger. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f0ad3a">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sheet: #f0ad3a;      /* the top sheet, amber yellow */
+    --ink: #3a1c08;        /* inchiostro bruno */
+    --pad: clamp(16px, 5vw, 24px);
+    --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .2  0 0 0 0 .05  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23p)'/></svg>");
+    --fibre: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 -.18'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--sheet) var(--grain); color: var(--ink);
+    font-family: "Figtree", system-ui, sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden;
+  }
+  body::before { content: ""; position: fixed; inset: 0; background: var(--fibre); opacity: .55; pointer-events: none; mix-blend-mode: soft-light; }
+
+  main {
+    position: relative; height: 100svh; max-width: 480px; margin: 0 auto;
+    display: grid; grid-template-rows: auto 1fr;
+    padding: max(var(--pad), env(safe-area-inset-top)) var(--pad) max(var(--pad), env(safe-area-inset-bottom));
+  }
+  h1 {
+    font-family: "Young Serif", Georgia, serif; font-weight: 400;
+    font-size: min(10.4vw, 6svh, 50px); line-height: 1.04; letter-spacing: -.012em;
+    text-shadow: 0 1px 0 rgba(255, 236, 190, .55);
+  }
+
+  /* The windows: holes in the top sheet. The composition is asymmetric, hand-placed. */
+  .cuts {
+    display: grid; gap: clamp(12px, 3.4vw, 16px); margin-top: clamp(14px, 2.8svh, 24px); min-height: 0;
+    grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1.15fr;
+    grid-template-areas: "one anim" "code four";
+  }
+  .cut {
+    position: relative; display: block; overflow: hidden; text-decoration: none; color: #fff; min-height: 0;
+    background: var(--deep);
+    box-shadow: 0 0 0 1.5px rgba(255, 233, 180, .5); /* the cut edge, lighter */
+    transition: transform .14s ease;
+  }
+  /* the sheet thickness: the shadow falls inside the hole, onto the sheet below, stronger at the top left */
+  .cut::after {
+    content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+    box-shadow:
+      inset 0 calc(var(--d) * 1px) calc(var(--d) * 1.7px) calc(var(--d) * -.4px) rgba(45, 18, 0, .62),
+      inset calc(var(--d) * .7px) 0 calc(var(--d) * 1.3px) calc(var(--d) * -.6px) rgba(45, 18, 0, .4),
+      inset 0 -1px 0 rgba(255, 255, 255, .14);
+  }
+  .cut:active { transform: scale(.985); }
+  .cut:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+  /* the sheet below, which shifts slightly with the finger */
+  .under {
+    position: absolute; inset: -14px; display: flex; flex-direction: column; justify-content: flex-end;
+    padding: calc(14px + clamp(12px, 3.6vw, 16px));
+    background: var(--deep) var(--grain);
+    transform: translate3d(var(--x, 0px), var(--y, 0px), 0);
+    will-change: transform;
+  }
+  .under::after { content: ""; position: absolute; inset: 0; background: var(--fibre); opacity: .35; mix-blend-mode: soft-light; pointer-events: none; }
+  .name { position: relative; z-index: 1; font-family: "Young Serif", Georgia, serif; font-size: clamp(19px, 5.6vw, 25px); line-height: 1.02; }
+  .say { position: relative; z-index: 1; margin-top: 4px; font-weight: 600; font-size: clamp(12px, 3.4vw, 14px); opacity: .9; }
+  .ico { position: relative; z-index: 1; width: clamp(40px, 12vw, 54px); height: clamp(40px, 12vw, 54px); border-radius: 50%; object-fit: contain; margin-bottom: auto; box-shadow: 0 3px 6px rgba(0, 0, 0, .3); }
+  .ico.disc { background: #fff8ec; padding: 8px; }
+
+  .one { grid-area: one; --deep: #1f3b6e; --d: 9; border-radius: 50%; align-self: center; aspect-ratio: 1; }
+  .one .under { align-items: center; justify-content: center; text-align: center; }
+  .one .ico { margin: 0 0 6px; }
+  .anim { grid-area: anim; --deep: #b8452c; --d: 14; border-radius: 999px 999px 10px 10px; }
+  .code { grid-area: code; --deep: #2a2622; --d: 18; border-radius: 10px; }
+  .four  { grid-area: four;  --deep: #6a2a52; --d: 11; border-radius: 34px; }
+
+  @media (prefers-reduced-motion: reduce) { .under { transform: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Your open space by First Last</h1>
+  <nav class="cuts" aria-label="Projects">
+    <a class="cut one" href="#project-1"><span class="under">
+      <img class="ico" src="../assets/project-1.svg" alt="">
+      <span class="name">Project one</span><span class="say">a short line</span></span></a>
+    <a class="cut anim" href="#project-2"><span class="under">
+      <img class="ico disc" src="../assets/project-2.svg" alt="">
+      <span class="name">Project two</span><span class="say">a short line</span></span></a>
+    <a class="cut code" href="#project-3"><span class="under">
+      <img class="ico disc" src="../assets/project-3.svg" alt="">
+      <span class="name">Project three</span><span class="say">a short line</span></span></a>
+    <a class="cut four" href="#project-4"><span class="under">
+      <img class="ico" src="../assets/project-4.svg" alt="">
+      <span class="name">Project four</span><span class="say">a short line</span></span></a>
+  </nav>
+</main>
+<script>
+// Parallax: the sheet under each window shifts with the finger, more the deeper it is.
+(() => {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cuts = [...document.querySelectorAll(".cut")].map((el) => ({
+    under: el.querySelector(".under"),
+    depth: parseFloat(getComputedStyle(el).getPropertyValue("--d")) || 10,
+  }));
+  let tx = 0, ty = 0, x = 0, y = 0, raf = 0;
+  const aim = (cx, cy) => {
+    tx = (cx / innerWidth) * 2 - 1;
+    ty = (cy / innerHeight) * 2 - 1;
+    if (!raf && !document.hidden) raf = requestAnimationFrame(step);
+  };
+  function step() {
+    x += (tx - x) * 0.12;
+    y += (ty - y) * 0.12;
+    for (const c of cuts) {
+      const k = c.depth * 0.5;
+      c.under.style.setProperty("--x", (-x * k).toFixed(2) + "px");
+      c.under.style.setProperty("--y", (-y * k).toFixed(2) + "px");
+    }
+    raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.002 ? requestAnimationFrame(step) : 0;
+  }
+  addEventListener("pointermove", (e) => aim(e.clientX, e.clientY), { passive: true });
+  addEventListener("pointerdown", (e) => aim(e.clientX, e.clientY), { passive: true });
+  addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) aim(t.clientX, t.clientY); }, { passive: true });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && raf) { cancelAnimationFrame(raf); raf = 0; } });
+})();
+</script>
+</body>
+</html>

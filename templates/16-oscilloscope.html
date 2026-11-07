@@ -1,0 +1,276 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title>, the <h1> and the two `fillText` calls of the script (the title is drawn on a canvas).
+     Projects: in the `APPS` array of the script (name, line) and in the .cell links (#project-N addresses).
+     Icons: this version uses no images: the projects are text only.
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 16 · Oscilloscope — an amber-phosphor cathode-ray tube: the beam retraces the title like vector graphics,
+     each project has its own Lissajous figure that vibrates and leaves a trail; the phosphor fades slowly. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0805">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    overflow: hidden; background: #0b0805; color: #ffb43a;
+    font-family: "Share Tech Mono", ui-monospace, monospace;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  }
+  .rig {
+    height: 100%; max-width: 480px; margin: 0 auto;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+  }
+  /* the instrument's plastic bezel */
+  .bezel {
+    position: relative; height: 100%; border-radius: 34px; padding: 12px;
+    background: linear-gradient(160deg, #2c2722, #15120f 45%, #221d19);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -2px 4px rgba(0,0,0,.6), 0 20px 40px rgba(0,0,0,.6);
+  }
+  .bezel::before, .bezel::after { /* screws */
+    content: ""; position: absolute; width: 8px; height: 8px; border-radius: 50%; top: 9px;
+    background: radial-gradient(circle at 35% 30%, #8f877f, #3b342f 60%, #120f0d);
+    box-shadow: 0 1px 1px rgba(0,0,0,.8);
+  }
+  .bezel::before { left: 13px; } .bezel::after { right: 13px; }
+  .screen {
+    position: relative; height: 100%; overflow: hidden;
+    border-radius: 26px / 30px; background: #0d0904;
+    box-shadow: inset 0 0 0 2px #050302, inset 0 0 40px rgba(0,0,0,.9);
+  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #beam { mix-blend-mode: screen; }
+  .scan, .glass, .vig { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+  .scan { background: repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.28) 2px 3px); }
+  .vig { background: radial-gradient(115% 95% at 50% 50%, transparent 58%, rgba(0,0,0,.72) 100%); }
+  .glass {
+    background:
+      radial-gradient(70% 40% at 28% 6%, rgba(255,240,220,.10), transparent 70%),
+      linear-gradient(170deg, rgba(255,255,255,.05), transparent 30%);
+    box-shadow: inset 0 0 22px rgba(0,0,0,.85);
+  }
+
+  /* the layout: the canvas reads it from the DOM */
+  .layout {
+    position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr;
+    padding: clamp(18px, 3.6svh, 30px) clamp(14px, 4vw, 20px) clamp(14px, 2.8svh, 22px);
+    gap: clamp(8px, 2svh, 16px);
+  }
+  .ttl { height: clamp(78px, 15svh, 112px); }
+  .cells { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .cell { position: relative; display: block; min-height: 44px; color: transparent; text-decoration: none; outline-offset: -6px; }
+  .cell:focus-visible { outline: 1px solid #ffb43a; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="rig">
+  <div class="bezel">
+    <div class="screen" id="screen">
+      <canvas id="grat" aria-hidden="true"></canvas>
+      <canvas id="beam" aria-hidden="true"></canvas>
+      <main class="layout">
+        <h1 class="ttl" id="ttl"><span class="sr">Your open space by First Last</span></h1>
+        <nav class="cells" aria-label="Projects">
+          <a class="cell" href="#project-1" data-i="0"><span class="sr">Project one, a short line</span></a>
+          <a class="cell" href="#project-2" data-i="1"><span class="sr">Project two, a short line</span></a>
+          <a class="cell" href="#project-3" data-i="2"><span class="sr">Project three, a short line</span></a>
+          <a class="cell" href="#project-4" data-i="3"><span class="sr">Project four, a short line</span></a>
+        </nav>
+      </main>
+      <div class="scan" aria-hidden="true"></div>
+      <div class="vig" aria-hidden="true"></div>
+      <div class="glass" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const AMBER = "255,180,58";
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const screen = document.getElementById("screen");
+  const grat = document.getElementById("grat"), beam = document.getElementById("beam");
+  const g = grat.getContext("2d"), b = beam.getContext("2d");
+  const ttl = document.getElementById("ttl");
+  const cells = [...document.querySelectorAll(".cell")];
+
+  // each project: name, line, frequency ratio of its figure
+  const APPS = [
+    { name: "Project one", say: "a short line", a: 1, b: 2, sp: .9 },
+    { name: "Project two", say: "a short line", a: 3, b: 2, sp: .7 },
+    { name: "Project three", say: "a short line", a: 3, b: 4, sp: .6 },
+    { name: "Project four", say: "a short line", a: 5, b: 4, sp: .5 },
+  ];
+  const boost = [0, 0, 0, 0];
+
+  let W = 0, H = 0, dpr = 1, txt = null, lines = [], regions = [];
+
+  function rel(el) {
+    const s = screen.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: r.left - s.left, y: r.top - s.top, w: r.width, h: r.height };
+  }
+
+  // the text pre-drawn once, with its glow
+  function buildText() {
+    txt = document.createElement("canvas");
+    txt.width = W * dpr; txt.height = H * dpr;
+    const t = txt.getContext("2d");
+    t.setTransform(dpr, 0, 0, dpr, 0, 0);
+    t.fillStyle = `rgb(${AMBER})`; t.shadowColor = `rgba(${AMBER},.9)`; t.shadowBlur = 6;
+    t.textBaseline = "alphabetic";
+    lines = [];
+    const T = rel(ttl);
+    const big = Math.min(T.h * .36, T.w / 12.2);
+    t.font = `${big}px "Share Tech Mono", monospace`;
+    t.fillText("Your open space", T.x, T.y + big * .9);
+    lines.push({ x: T.x, y: T.y, w: t.measureText("Your open space").width, h: big * 1.1 });
+    const sm = big * .62;
+    t.font = `${sm}px "Share Tech Mono", monospace`;
+    const y2 = T.y + big * 1.35 + sm;
+    t.fillText("by First Last", T.x, y2);
+    lines.push({ x: T.x, y: y2 - sm, w: t.measureText("by First Last").width, h: sm * 1.2 });
+
+    regions.forEach((R, i) => {
+      const nm = Math.min(R.w / 9.2, 20), sy = nm * .78;
+      t.font = `${nm}px "Share Tech Mono", monospace`;
+      const nw = t.measureText(APPS[i].name).width;
+      const ny = R.y + R.h - sy * 1.6 - 6;
+      t.fillText(APPS[i].name, R.x + (R.w - nw) / 2, ny);
+      lines.push({ x: R.x + (R.w - nw) / 2, y: ny - nm, w: nw, h: nm * 1.2 });
+      t.font = `${sy}px "Share Tech Mono", monospace`;
+      t.globalAlpha = .75;
+      const sw = t.measureText(APPS[i].say).width;
+      t.fillText(APPS[i].say, R.x + (R.w - sw) / 2, ny + sy * 1.45);
+      t.globalAlpha = 1;
+      lines.push({ x: R.x + (R.w - sw) / 2, y: ny + sy * .45, w: sw, h: sy * 1.2 });
+      R.labelTop = ny - nm - 6;
+    });
+  }
+
+  // the graticule, static
+  function drawGrat() {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.strokeStyle = `rgba(${AMBER},.10)`; g.lineWidth = 1;
+    const step = W / 10;
+    g.beginPath();
+    for (let x = step; x < W; x += step) { g.moveTo(Math.round(x) + .5, 0); g.lineTo(Math.round(x) + .5, H); }
+    for (let y = step; y < H; y += step) { g.moveTo(0, Math.round(y) + .5); g.lineTo(W, Math.round(y) + .5); }
+    g.stroke();
+    // central axes with tick marks, one per cell
+    g.strokeStyle = `rgba(${AMBER},.16)`;
+    regions.forEach((R) => {
+      const cx = R.x + R.w / 2, cy = R.y + (R.labelTop - R.y) / 2;
+      g.beginPath();
+      g.moveTo(R.x + 8, cy + .5); g.lineTo(R.x + R.w - 8, cy + .5);
+      g.moveTo(cx + .5, R.y + 6); g.lineTo(cx + .5, R.labelTop - 4);
+      for (let k = -5; k <= 5; k++) {
+        const tx = cx + k * (R.w - 16) / 10, ty = cy + k * (R.labelTop - R.y - 10) / 10;
+        g.moveTo(tx + .5, cy - 3); g.lineTo(tx + .5, cy + 3);
+        g.moveTo(cx - 3, ty + .5); g.lineTo(cx + 3, ty + .5);
+      }
+      g.stroke();
+    });
+    // dividers between the cells
+    g.strokeStyle = `rgba(${AMBER},.22)`;
+    g.setLineDash([2, 4]);
+    const c0 = regions[0], c3 = regions[3];
+    g.beginPath();
+    g.moveTo(c0.x + c0.w + .5, c0.y + 4); g.lineTo(c0.x + c0.w + .5, c3.y + c3.h - 4);
+    g.moveTo(c0.x + 4, c0.y + c0.h + .5); g.lineTo(c3.x + c3.w - 4, c0.y + c0.h + .5);
+    g.stroke(); g.setLineDash([]);
+  }
+
+  function layout() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    const s = screen.getBoundingClientRect(); W = s.width; H = s.height;
+    for (const c of [grat, beam]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    regions = cells.map(rel);
+    buildText();
+    drawGrat();
+    b.setTransform(1, 0, 0, 1, 0, 0); b.fillStyle = "#000"; b.fillRect(0, 0, beam.width, beam.height);
+  }
+
+  // ---------- the beam ----------
+  let phase = 0, scanT = 0, last = performance.now();
+  function lissajous(R, i, t, dt) {
+    const A = APPS[i];
+    const cx = R.x + R.w / 2, cy = R.y + (R.labelTop - R.y) / 2;
+    const ax = (R.w / 2 - 14) * (1 + boost[i] * .12), ay = ((R.labelTop - R.y) / 2 - 8) * (1 + boost[i] * .12);
+    const delta = t * .23 * A.sp + i;
+    const vib = 1 + .018 * Math.sin(t * 37 + i) + .01 * Math.sin(t * 61.7);
+    const p0 = t * A.sp * 2.2;
+    const span = 2.4;                                   // how much of the figure the beam draws in one frame
+    const N = 70;
+    b.beginPath();
+    for (let k = 0; k <= N; k++) {
+      const u = p0 + (k / N) * span;
+      const jx = (Math.random() - .5) * .5, jy = (Math.random() - .5) * .5;
+      const x = cx + ax * vib * Math.sin(A.a * u + delta) + jx;
+      const y = cy + ay * vib * Math.sin(A.b * u) + jy;
+      k ? b.lineTo(x * dpr, y * dpr) : b.moveTo(x * dpr, y * dpr);
+    }
+    b.strokeStyle = `rgba(${AMBER},${.16 + boost[i] * .2})`; b.lineWidth = 4.2 * dpr; b.stroke();
+    b.strokeStyle = `rgba(255,214,140,${.75 + boost[i] * .25})`; b.lineWidth = 1.25 * dpr; b.stroke();
+  }
+
+  function frame(now) {
+    raf = 0;
+    if (document.hidden) return;
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    const t = now / 1000;
+    // the phosphor fades
+    b.globalCompositeOperation = "source-over";
+    b.fillStyle = "rgba(0,0,0,.17)"; b.fillRect(0, 0, beam.width, beam.height);
+    // the text stays lit…
+    b.globalAlpha = .26; b.drawImage(txt, 0, 0); b.globalAlpha = 1;
+    // …and the beam retraces it, line after line
+    b.globalCompositeOperation = "lighter";
+    scanT += dt;
+    const per = .9, total = lines.length * per + 1.2;
+    const k = scanT % total, li = Math.floor(k / per);
+    if (li < lines.length) {
+      const L = lines[li], f = (k - li * per) / per;
+      const wx = L.x - 6 + f * (L.w + 12);
+      const ww = Math.max(18, L.w * .14);
+      b.drawImage(txt, (wx - ww) * dpr, (L.y - 4) * dpr, ww * dpr, (L.h + 10) * dpr, (wx - ww) * dpr, (L.y - 4) * dpr, ww * dpr, (L.h + 10) * dpr);
+      b.fillStyle = `rgba(255,226,170,.9)`;                        // the beam's dot
+      b.beginPath(); b.arc(wx * dpr, (L.y + L.h * .55) * dpr, 1.6 * dpr, 0, Math.PI * 2); b.fill();
+    }
+    regions.forEach((R, i) => { boost[i] *= .94; lissajous(R, i, t, dt); });
+    b.globalCompositeOperation = "source-over";
+    raf = requestAnimationFrame(frame);
+  }
+
+  function still() {
+    b.globalCompositeOperation = "source-over";
+    b.fillStyle = "#000"; b.fillRect(0, 0, beam.width, beam.height);
+    b.drawImage(txt, 0, 0);
+    b.globalCompositeOperation = "lighter";
+    for (let s = 0; s < 6; s++) regions.forEach((R, i) => lissajous(R, i, 3 + s * .45, 0));
+    b.globalCompositeOperation = "source-over";
+  }
+
+  cells.forEach((c, i) => c.addEventListener("pointerdown", () => { boost[i] = 1; }));
+
+  let raf = 0;
+  const start = () => {
+    layout();
+    if (reduce) { still(); return; }
+    if (!raf) raf = requestAnimationFrame(frame);
+  };
+  const ready = document.fonts ? document.fonts.load('20px "Share Tech Mono"').catch(() => {}) : Promise.resolve();
+  Promise.race([ready, new Promise((r) => setTimeout(r, 1500))]).then(start);
+  addEventListener("resize", () => { layout(); if (reduce) still(); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && !reduce && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); } });
+})();
+</script>
+</body>
+</html>

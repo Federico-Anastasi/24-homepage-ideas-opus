@@ -1,0 +1,237 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address); the text running around each seal is in the <textPath>.
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 14 · Holographic foil — the page is a special card in iridescent foil with a banknote-style guilloche background:
+     the colour shifts with the angle (finger or device tilt) and the four projects are four embossed holographic seals. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0d11">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    overflow: hidden; background: radial-gradient(120% 80% at 50% 30%, #1b1d25, #08090c);
+    font-family: "Archivo", system-ui, sans-serif; color: #15171f;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  }
+  .wrap {
+    height: 100%; max-width: 480px; margin: 0 auto;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  }
+  .card {
+    --mx: .5; --my: .35; --ang: 115deg; --rot: 0;
+    position: relative; height: 100%; border-radius: 26px; overflow: hidden; isolation: isolate;
+    touch-action: none;
+    background:
+      linear-gradient(calc(var(--ang) + 20deg), #e9ebf0 0%, #aeb3bd 28%, #f1f2f5 47%, #9da3ae 68%, #dfe2e8 100%);
+    box-shadow: 0 30px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.35) inset, 0 -2px 0 rgba(0,0,0,.25) inset;
+    padding: clamp(18px, 3.4svh, 28px) clamp(18px, 5vw, 24px);
+    display: flex; flex-direction: column;
+  }
+  /* foil layers */
+  .guil, .foil, .lines, .spark, .glare { position: absolute; inset: 0; pointer-events: none; }
+  .guil { z-index: 0; opacity: .5; }
+  .foil {
+    z-index: 1; mix-blend-mode: color-dodge; opacity: .62;
+    background-image: repeating-linear-gradient(var(--ang),
+      #ff6f7d 0%, #ffcf6e 6%, #f6ff8a 10%, #7dffc4 15%, #6fd8ff 21%, #8e8bff 27%, #ff7fe0 33%, #ff6f7d 39%);
+    background-size: 340% 340%;
+    background-position: calc(var(--mx) * 100%) calc(var(--my) * 100%);
+    filter: saturate(1.25) contrast(1.05);
+  }
+  .lines {
+    z-index: 2; mix-blend-mode: overlay; opacity: .55;
+    background: repeating-linear-gradient(calc(var(--ang) - 70deg), rgba(255,255,255,.22) 0 1px, rgba(0,0,0,.06) 1px 3px);
+  }
+  .spark {
+    z-index: 3; mix-blend-mode: color-dodge; opacity: .35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 9 -6.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-position: calc(var(--mx) * 60px) calc(var(--my) * 60px);
+  }
+  .glare {
+    z-index: 4; mix-blend-mode: overlay;
+    background: radial-gradient(circle at calc(var(--mx) * 100%) calc(var(--my) * 100%), rgba(255,255,255,.85), rgba(255,255,255,.15) 28%, transparent 55%);
+  }
+
+  /* embossed content, above the foil */
+  .content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; }
+  h1 { margin: 0; font-weight: 800; font-stretch: 118%; letter-spacing: -.02em; line-height: .95; }
+  .big { display: block; font-size: clamp(30px, 8.4vw, 38px); }
+  .small { display: block; margin-top: .5em; font-weight: 600; font-stretch: 100%; font-size: clamp(15px, 2.6svh, 18px); letter-spacing: 0; }
+  .emboss { color: #1a1c25; text-shadow: 0 1px 0 rgba(255,255,255,.75), 0 -1px 0 rgba(0,0,0,.18); }
+
+  .seals {
+    flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: clamp(6px, 1.4svh, 14px) 12px;
+    align-content: center; padding-top: clamp(8px, 2svh, 18px);
+  }
+  .seal {
+    --d: min(37vw, 21svh, 168px);
+    display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; color: inherit;
+    transition: transform .14s ease;
+  }
+  .seal:nth-child(even) { transform: translateY(clamp(14px, 3.4svh, 30px)); }
+  .seal:active .disc { transform: scale(.96); box-shadow: 0 3px 8px rgba(0,0,0,.28), inset 0 2px 1px rgba(255,255,255,.7), inset 0 -2px 3px rgba(0,0,0,.3); }
+  .disc {
+    position: relative; width: var(--d); height: var(--d); border-radius: 50%;
+    background:
+      radial-gradient(circle, transparent 57%, rgba(255,255,255,.25) 58%, transparent 61%),
+      repeating-conic-gradient(from calc(var(--rot) * 1deg + var(--o)), rgba(255,255,255,.22) 0 1.5deg, rgba(0,0,0,.05) 1.5deg 3deg),
+      conic-gradient(from calc(var(--rot) * 1deg + var(--o)), #ff7b86, #ffd977, #f4ff8f, #87ffc8, #7ad8ff, #9b8cff, #ff86e2, #ff7b86);
+    box-shadow:
+      0 8px 18px rgba(0,0,0,.32), 0 2px 3px rgba(0,0,0,.25),
+      inset 0 2px 1px rgba(255,255,255,.75), inset 0 -4px 6px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.4);
+    transition: transform .14s ease, box-shadow .14s ease;
+  }
+  .disc::after { /* reflection that follows the angle */
+    content: ""; position: absolute; inset: 0; border-radius: 50%; mix-blend-mode: overlay;
+    background: radial-gradient(circle at calc(var(--mx) * 100%) calc(var(--my) * 100%), rgba(255,255,255,.9), transparent 55%);
+  }
+  .ring { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ring text { font: 600 9.4px "Archivo", sans-serif; font-stretch: 112%; letter-spacing: .14em; fill: rgba(20,22,32,.72); }
+  .core {
+    position: absolute; inset: 24%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff, #dfe2e8 60%, #b9bec8);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.25), inset 0 -1px 1px rgba(255,255,255,.8), 0 1px 0 rgba(255,255,255,.6);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .core img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .core img.pad { width: 66%; height: 66%; object-fit: contain; border-radius: 0; }
+  .name { margin-top: clamp(6px, 1.2svh, 10px); font-weight: 800; font-stretch: 108%; font-size: clamp(15px, 2.6svh, 18px); line-height: 1.1; }
+  .say { font-weight: 500; font-size: clamp(13px, 2.1svh, 15px); color: rgba(20,22,32,.72); }
+
+  @media (min-width: 700px) { .wrap { padding: 24px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main class="card" id="card">
+    <svg class="guil" id="guil" aria-hidden="true"></svg>
+    <div class="foil" aria-hidden="true"></div>
+    <div class="lines" aria-hidden="true"></div>
+    <div class="spark" aria-hidden="true"></div>
+    <div class="glare" aria-hidden="true"></div>
+
+    <div class="content">
+      <h1 class="emboss"><span class="big">Your open space</span><span class="small">by First Last</span></h1>
+
+      <nav class="seals" aria-label="Projects">
+        <a class="seal" href="#project-1" style="--o: 0deg">
+          <span class="disc">
+            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><defs><path id="r1" d="M50 50 m-41 0 a41 41 0 1 1 82 0 a41 41 0 1 1 -82 0"/></defs><text><textPath href="#r1" textLength="254" lengthAdjust="spacing">category · category · category · </textPath></text></svg>
+            <span class="core"><img src="../assets/project-1.svg" alt=""></span>
+          </span>
+          <span class="name emboss">Project one</span><span class="say">a short line</span>
+        </a>
+        <a class="seal" href="#project-2" style="--o: 90deg">
+          <span class="disc">
+            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><defs><path id="r2" d="M50 50 m-41 0 a41 41 0 1 1 82 0 a41 41 0 1 1 -82 0"/></defs><text><textPath href="#r2" textLength="254" lengthAdjust="spacing">category · category · category · </textPath></text></svg>
+            <span class="core"><img class="pad" src="../assets/project-2.svg" alt=""></span>
+          </span>
+          <span class="name emboss">Project two</span><span class="say">a short line</span>
+        </a>
+        <a class="seal" href="#project-3" style="--o: 180deg">
+          <span class="disc">
+            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><defs><path id="r3" d="M50 50 m-41 0 a41 41 0 1 1 82 0 a41 41 0 1 1 -82 0"/></defs><text><textPath href="#r3" textLength="254" lengthAdjust="spacing">category · category · category · </textPath></text></svg>
+            <span class="core"><img class="pad" src="../assets/project-3.svg" alt=""></span>
+          </span>
+          <span class="name emboss">Project three</span><span class="say">a short line</span>
+        </a>
+        <a class="seal" href="#project-4" style="--o: 270deg">
+          <span class="disc">
+            <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><defs><path id="r4" d="M50 50 m-41 0 a41 41 0 1 1 82 0 a41 41 0 1 1 -82 0"/></defs><text><textPath href="#r4" textLength="254" lengthAdjust="spacing">category · category · category · </textPath></text></svg>
+            <span class="core"><img src="../assets/project-4.svg" alt=""></span>
+          </span>
+          <span class="name emboss">Project four</span><span class="say">a short line</span>
+        </a>
+      </nav>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const card = document.getElementById("card");
+  const guil = document.getElementById("guil");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- guilloche background: rosettes like on banknotes ----------
+  function rosette(cx, cy, R, r, d, turns, steps) {
+    let s = "";
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * Math.PI * 2 * turns;
+      const x = cx + (R - r) * Math.cos(t) + d * Math.cos(((R - r) / r) * t);
+      const y = cy + (R - r) * Math.sin(t) - d * Math.sin(((R - r) / r) * t);
+      s += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+    }
+    return s;
+  }
+  function drawGuil() {
+    const b = card.getBoundingClientRect(), w = b.width, h = b.height;
+    guil.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    const m = Math.min(w, h);
+    let p = "";
+    p += `<path d="${rosette(w * .92, h * .1, m * .55, m * .055, m * .2, 11, 2400)}"/>`;
+    p += `<path d="${rosette(w * .08, h * .95, m * .62, m * .07, m * .24, 9, 2200)}"/>`;
+    p += `<path d="${rosette(w * .5, h * .58, m * .48, m * .043, m * .14, 13, 2600)}" opacity=".6"/>`;
+    // thin horizontal waves
+    for (let k = 0; k < 26; k++) {
+      const y0 = (k / 25) * h; let d = "";
+      for (let x = 0; x <= w; x += 6) d += (x ? "L" : "M") + x + " " + (y0 + Math.sin(x / 22 + k * .7) * 5).toFixed(1);
+      p += `<path d="${d}" opacity=".35"/>`;
+    }
+    guil.innerHTML = `<g fill="none" stroke="rgba(40,44,62,.32)" stroke-width=".55">${p}</g>`;
+  }
+  drawGuil();
+  addEventListener("resize", drawGuil);
+
+  // ---------- the angle: finger, device tilt (if no permission is needed) or a slow turn on its own ----------
+  let tx = .5, ty = .35, x = .5, y = .35, lastInput = -1e9, raf = 0;
+  const point = (e) => {
+    const r = card.getBoundingClientRect();
+    tx = (e.clientX - r.left) / r.width; ty = (e.clientY - r.top) / r.height; lastInput = performance.now();
+  };
+  card.addEventListener("pointermove", point);
+  card.addEventListener("pointerdown", point);
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission !== "function") {
+    addEventListener("deviceorientation", (e) => {
+      if (e.gamma == null) return;
+      tx = Math.min(1, Math.max(0, .5 + e.gamma / 50));
+      ty = Math.min(1, Math.max(0, .5 + (e.beta - 40) / 50));
+      lastInput = performance.now();
+    });
+  }
+  function apply() {
+    card.style.setProperty("--mx", x.toFixed(4));
+    card.style.setProperty("--my", y.toFixed(4));
+    card.style.setProperty("--ang", (105 + (x - .5) * 70 + (y - .5) * 30).toFixed(2) + "deg");
+    card.style.setProperty("--rot", ((x * .7 + y * .3) * 300).toFixed(2));
+  }
+  function frame(now) {
+    raf = 0;
+    if (document.hidden) return;
+    if (now - lastInput > 2600) {
+      const t = now / 1000;
+      tx = .5 + .36 * Math.sin(t * .33); ty = .42 + .28 * Math.sin(t * .23 + 1.3);
+    }
+    x += (tx - x) * .085; y += (ty - y) * .085;
+    apply();
+    raf = requestAnimationFrame(frame);
+  }
+  if (reduce) apply();
+  else {
+    raf = requestAnimationFrame(frame);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden && !raf) raf = requestAnimationFrame(frame); });
+  }
+})();
+</script>
+</body>
+</html>

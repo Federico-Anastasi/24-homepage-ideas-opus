@@ -1,0 +1,255 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1>, split in several elements: "Your" / "open" / "space by First Last".
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: this version uses no images: the projects are text only.
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 13 · Neon signs — a brick wall at night: the title is a big sign with an 'open' light like those in shop windows,
+     the four projects are four coloured signs that light up the wall and flicker now and then. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140e0c">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tilt+Neon&family=Sacramento&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html { background: #140e0c; height: 100%; }
+  body {
+    margin: 0; height: 100%; overflow: hidden; color: #fff;
+    font-family: "Tilt Neon", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  }
+  #wall { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -3; }
+  #cables { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; }
+  .shade {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(120% 85% at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%);
+  }
+
+  .stage {
+    position: relative; height: 100%; max-width: 480px; margin: 0 auto;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(14px, env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+
+  /* ---------- the glass tube ---------- */
+  .tube {
+    --core: color-mix(in srgb, var(--c) 28%, #fff);
+    color: var(--core);
+    text-shadow:
+      0 0 1px var(--core),
+      0 0 3px var(--c),
+      0 0 7px var(--c),
+      0 0 16px var(--c),
+      0 0 34px var(--c),
+      0 0 60px color-mix(in srgb, var(--c) 60%, transparent),
+      2px 6px 5px rgba(0,0,0,.6);
+    animation: hum 6.5s ease-in-out infinite;
+  }
+  @keyframes hum { 0%,100% { opacity: 1; } 50% { opacity: .93; } }
+  .off .tube, .tube.off {
+    color: color-mix(in srgb, var(--c) 18%, #3b2c27);
+    text-shadow: 0 1px 0 rgba(255,255,255,.06), 2px 6px 5px rgba(0,0,0,.6);
+    animation: none;
+  }
+
+  /* ---------- the big sign ---------- */
+  h1 { margin: 0; text-align: center; font-weight: 400; line-height: 1; position: relative; }
+  h1::before {
+    content: ""; position: absolute; inset: -40% -20% -30%; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(closest-side at 50% 58%, rgba(255,120,60,.30), transparent),
+      radial-gradient(closest-side at 50% 18%, rgba(255,236,214,.12), transparent 70%);
+    mix-blend-mode: screen;
+  }
+  h1.dim::before { opacity: .25; }
+  .t1 { --c: #ffd9b0; display: block; font-size: clamp(26px, 5.1svh, 36px); letter-spacing: .01em; }
+  .t2 {
+    --c: #ff5a2a; display: block; font-family: "Sacramento", cursive;
+    font-size: clamp(66px, 13.5svh, 98px); line-height: .9; margin: .04em 0 .02em; transform: rotate(-4deg);
+  }
+  .t3 { --c: #9fd2ff; display: block; font-size: clamp(16px, 3svh, 21px); letter-spacing: .02em; }
+
+  /* ---------- the four signs ---------- */
+  .signs { display: flex; flex-direction: column; gap: clamp(8px, 1.7svh, 16px); }
+  .sign {
+    position: relative; display: block; width: max-content; max-width: 86%;
+    text-decoration: none; color: inherit;
+    padding: clamp(9px, 1.6svh, 14px) 18px clamp(10px, 1.7svh, 15px);
+    border-radius: 7px;
+    background: linear-gradient(165deg, rgba(255,255,255,.06), rgba(255,255,255,.012) 45%, rgba(255,255,255,.035));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), inset 0 1px 0 rgba(255,255,255,.08), 0 14px 26px rgba(0,0,0,.4);
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .sign:nth-child(odd) { align-self: flex-start; transform: rotate(-.7deg); }
+  .sign:nth-child(even) { align-self: flex-end; transform: rotate(.6deg); text-align: right; }
+  .sign::before {
+    content: ""; position: absolute; inset: -70% -35%; z-index: -1; pointer-events: none;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 36%, transparent), transparent);
+    mix-blend-mode: screen; transition: opacity .05s;
+  }
+  .sign.off::before { opacity: .12; }
+  .sign:active { filter: brightness(1.3) saturate(1.1); }
+  .sign:nth-child(odd):active { transform: rotate(-.7deg) translateY(1px); }
+  .sign:nth-child(even):active { transform: rotate(.6deg) translateY(1px); }
+  .name { display: block; font-size: clamp(25px, 4.7svh, 33px); line-height: 1.05; white-space: nowrap; }
+  .say { --c: #fff3e4; display: block; margin-top: .3em; font-size: clamp(14px, 2.5svh, 17px); letter-spacing: .03em; opacity: .92; }
+  .screw {
+    position: absolute; width: 7px; height: 7px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #efe9e3, #8a817a 55%, #2a2321);
+    box-shadow: 0 1px 2px rgba(0,0,0,.7);
+  }
+  .screw:nth-of-type(1) { top: 6px; left: 6px; } .screw:nth-of-type(2) { top: 6px; right: 6px; }
+  .screw:nth-of-type(3) { bottom: 6px; left: 6px; } .screw:nth-of-type(4) { bottom: 6px; right: 6px; }
+
+  .one  { --c: #ff7a2e; }
+  .anim  { --c: #ffc83a; }
+  .code  { --c: #35c4ff; }
+  .four   { --c: #ff4fb4; }
+
+  body.paused .tube { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .tube { animation: none; } }
+</style>
+</head>
+<body>
+<canvas id="wall" aria-hidden="true"></canvas>
+<svg id="cables" aria-hidden="true"></svg>
+<div class="shade" aria-hidden="true"></div>
+
+<main class="stage">
+  <h1 id="title">
+    <span class="t1 tube">Your</span>
+    <span class="t2 tube" data-flicker>open</span>
+    <span class="t3 tube">space by First Last</span>
+  </h1>
+
+  <nav class="signs" aria-label="Projects">
+    <a class="sign one" href="#project-1" data-flicker>
+      <span class="screw"></span><span class="screw"></span><span class="screw"></span><span class="screw"></span>
+      <span class="name tube">Project one</span><span class="say tube">a short line</span>
+    </a>
+    <a class="sign anim" href="#project-2" data-flicker>
+      <span class="screw"></span><span class="screw"></span><span class="screw"></span><span class="screw"></span>
+      <span class="name tube">Project two</span><span class="say tube">a short line</span>
+    </a>
+    <a class="sign code" href="#project-3" data-flicker>
+      <span class="screw"></span><span class="screw"></span><span class="screw"></span><span class="screw"></span>
+      <span class="name tube">Project three</span><span class="say tube">a short line</span>
+    </a>
+    <a class="sign four" href="#project-4" data-flicker>
+      <span class="screw"></span><span class="screw"></span><span class="screw"></span><span class="screw"></span>
+      <span class="name tube">Project four</span><span class="say tube">a short line</span>
+    </a>
+  </nav>
+</main>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const wall = document.getElementById("wall");
+  const cables = document.getElementById("cables");
+
+  // repeatable random numbers: the wall is always the same
+  function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  // ---------- the brick wall, drawn once ----------
+  function drawWall() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const w = innerWidth, h = innerHeight;
+    wall.width = Math.round(w * dpr); wall.height = Math.round(h * dpr);
+    const g = wall.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const r = rng(11);
+    g.fillStyle = "#120c0a"; g.fillRect(0, 0, w, h);               // mortar
+    const bw = 62, bh = 23, m = 3;
+    for (let row = 0, y = -4; y < h + bh; row++, y += bh) {
+      const off = (row % 2) * bw / 2 + (r() - .5) * 4;
+      for (let x = -bw + off; x < w + bw; x += bw) {
+        const l = 11 + r() * 7, s = 26 + r() * 18, hue = 6 + r() * 16;
+        const bx = x + m / 2 + (r() - .5), by = y + m / 2, ww = bw - m, hh = bh - m;
+        g.fillStyle = `hsl(${hue} ${s}% ${l}%)`;
+        g.beginPath(); g.roundRect ? g.roundRect(bx, by, ww, hh, 2) : g.rect(bx, by, ww, hh); g.fill();
+        // brick stains and wear
+        for (let k = 0; k < 3; k++) {
+          const cx = bx + r() * ww, cy = by + r() * hh, rr = 3 + r() * 10;
+          const gr = g.createRadialGradient(cx, cy, 0, cx, cy, rr);
+          gr.addColorStop(0, r() > .5 ? "rgba(0,0,0,.22)" : "rgba(255,210,180,.05)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+          g.fillStyle = gr; g.fillRect(bx, by, ww, hh);
+        }
+        g.fillStyle = "rgba(255,230,210,.045)"; g.fillRect(bx, by, ww, 1.2);       // top edge
+        g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(bx, by + hh - 1.6, ww, 1.6);  // bottom edge
+      }
+    }
+    // grain
+    const n = document.createElement("canvas"); n.width = n.height = 160;
+    const ng = n.getContext("2d"), id = ng.createImageData(160, 160);
+    for (let i = 0; i < id.data.length; i += 4) { const v = r() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 26; }
+    ng.putImageData(id, 0, 0);
+    g.fillStyle = g.createPattern(n, "repeat"); g.fillRect(0, 0, w, h);
+    // damp stains
+    for (let k = 0; k < 5; k++) {
+      const cx = r() * w, cy = r() * h, rr = 120 + r() * 220;
+      const gr = g.createRadialGradient(cx, cy, 0, cx, cy, rr);
+      gr.addColorStop(0, "rgba(0,0,0,.28)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    }
+  }
+
+  // ---------- the cables running down from the signs to the edge ----------
+  function drawCables() {
+    const w = innerWidth, h = innerHeight;
+    cables.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    let d = "";
+    document.querySelectorAll(".sign").forEach((s, i) => {
+      const b = s.getBoundingClientRect();
+      const left = i % 2 === 0;
+      const x0 = left ? b.left + 14 : b.right - 14, y0 = b.bottom - 2;
+      const x1 = left ? -10 : w + 10, y1 = Math.min(h + 10, y0 + 70 + i * 6);
+      const cx = left ? x0 - 10 : x0 + 10;
+      d += `M${x0} ${y0} C ${cx} ${y0 + 46}, ${(x0 + x1) / 2} ${y1 + 8}, ${x1} ${y1} `;
+    });
+    const t = document.getElementById("title").getBoundingClientRect();
+    d += `M${t.left + t.width * .5} ${t.bottom - 6} C ${t.left + t.width * .5 + 8} ${t.bottom + 40}, ${w * .9} ${t.bottom + 30}, ${w + 10} ${t.bottom + 50}`;
+    cables.innerHTML =
+      `<path d="${d}" fill="none" stroke="#070505" stroke-width="2.4" stroke-linecap="round"/>` +
+      `<path d="${d}" fill="none" stroke="rgba(255,235,220,.09)" stroke-width=".8" stroke-linecap="round" transform="translate(-.5,-.6)"/>`;
+  }
+
+  function layout() { drawWall(); drawCables(); }
+  layout();
+  addEventListener("resize", layout);
+  if (document.fonts) document.fonts.ready.then(drawCables);
+
+  // ---------- the flicker, rare and believable ----------
+  const els = [...document.querySelectorAll("[data-flicker]")];
+  const title = document.getElementById("title");
+  let timer = 0;
+  function schedule() { clearTimeout(timer); timer = setTimeout(flicker, 3200 + Math.random() * 6500); }
+  function flicker() {
+    if (document.hidden) return schedule();
+    const el = els[Math.random() * els.length | 0];
+    const seq = [60, 45, 140, 35, 70, 30, 90];
+    const n = 3 + (Math.random() * 4 | 0);
+    let i = 0;
+    const step = () => {
+      const off = i % 2 === 0;
+      el.classList.toggle("off", off);
+      if (el.classList.contains("t2")) title.classList.toggle("dim", off);
+      if (++i < n) setTimeout(step, seq[i % seq.length]);
+      else { el.classList.remove("off"); title.classList.remove("dim"); schedule(); }
+    };
+    step();
+  }
+  if (!reduce) schedule();
+  document.addEventListener("visibilitychange", () => {
+    document.body.classList.toggle("paused", document.hidden);
+    if (!document.hidden && !reduce) schedule();
+  });
+})();
+</script>
+</body>
+</html>

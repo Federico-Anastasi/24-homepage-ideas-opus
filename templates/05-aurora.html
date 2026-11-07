@@ -1,0 +1,169 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 05 · Aurora — a warm mesh gradient (amber, coral, midnight blue) drifting slowly in WebGL, with fine grain.
+     The four projects are windows cut into the color: inside, the same sky, more saturated and sharper. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1530">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #fff; --font: "Bricolage Grotesque", system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1530; color: var(--ink); }
+  body { font-family: var(--font); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  /* Fallback without WebGL: the same sky, still */
+  #sky {
+    position: fixed; inset: 0; width: 100%; height: 100%; display: block;
+    background:
+      radial-gradient(120% 70% at 15% 105%, #ffb21e 0%, transparent 55%),
+      radial-gradient(90% 60% at 95% 80%, #ff5f45 0%, transparent 60%),
+      radial-gradient(80% 50% at 70% 35%, #c2346b 0%, transparent 65%),
+      #0d1530;
+  }
+  .stage {
+    position: fixed; inset: 0; margin: 0 auto; max-width: 480px;
+    display: flex; flex-direction: column;
+    padding: max(22px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+  }
+  h1 {
+    margin: 4px 4px 0; font-weight: 800; font-variation-settings: "opsz" 96;
+    font-size: clamp(38px, 7.2svh, 54px); line-height: .94; letter-spacing: -.035em;
+    text-wrap: balance; text-shadow: 0 2px 30px rgba(8, 12, 40, .35);
+  }
+  h1 span { display: block; font-weight: 500; opacity: .86; }
+  .windows {
+    flex: 1; margin-top: clamp(18px, 3.4svh, 30px); min-height: 0;
+    display: grid; gap: 10px;
+    grid-template-columns: 1.08fr 1fr;
+    grid-template-rows: 1fr 1fr .78fr;
+    grid-template-areas: "one anim" "one code" "four four";
+  }
+  .win {
+    position: relative; overflow: hidden; border-radius: 24px; text-decoration: none; color: #fff;
+    padding: 14px 15px; display: flex; flex-direction: column; justify-content: space-between;
+    /* the window: the same sky, more saturated and sharper */
+    -webkit-backdrop-filter: saturate(1.9) contrast(1.12) brightness(1.06);
+    backdrop-filter: saturate(1.9) contrast(1.12) brightness(1.06);
+    background: rgba(255, 255, 255, .035);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .34), inset 0 1px 0 rgba(255, 255, 255, .55), 0 18px 40px -24px rgba(5, 8, 30, .7);
+    transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s ease;
+  }
+  .win::after { /* thin reflection on the top edge */
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 38%);
+  }
+  .win:active { transform: scale(.972); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .7), 0 8px 20px -16px rgba(5, 8, 30, .7); }
+  .one { grid-area: one; } .anim { grid-area: anim; } .code { grid-area: code; } .four { grid-area: four; }
+  .four { flex-direction: row; align-items: center; gap: 14px; justify-content: flex-start; }
+  .ico { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); }
+  .ico.flat { object-fit: contain; background: rgba(255, 255, 255, .92); padding: 7px; }
+  .one .ico { width: 58px; height: 58px; }
+  .name { display: block; font-weight: 700; font-size: clamp(19px, 3.3svh, 24px); line-height: 1.02; letter-spacing: -.02em; }
+  .say { display: block; margin-top: 4px; font-weight: 500; font-size: 14px; opacity: .88; }
+  .one .name { font-size: clamp(26px, 4.6svh, 34px); }
+  @media (max-height: 600px) { .say { display: none; } .ico { width: 34px; height: 34px; } .one .ico { width: 46px; height: 46px; } }
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main class="stage">
+  <h1>Your open space <span>by First Last</span></h1>
+  <nav class="windows" aria-label="Projects">
+    <a class="win one" href="#project-1">
+      <img class="ico" src="../assets/project-1.svg" alt="">
+      <span><span class="name">Project one</span><span class="say">a short line</span></span>
+    </a>
+    <a class="win anim" href="#project-2">
+      <img class="ico flat" src="../assets/project-2.svg" alt="">
+      <span><span class="name">Project two</span><span class="say">a short line</span></span>
+    </a>
+    <a class="win code" href="#project-3">
+      <img class="ico flat" src="../assets/project-3.svg" alt="">
+      <span><span class="name">Project three</span><span class="say">a short line</span></span>
+    </a>
+    <a class="win four" href="#project-4">
+      <img class="ico" src="../assets/project-4.svg" alt="">
+      <span><span class="name">Project four</span><span class="say">a short line</span></span>
+    </a>
+  </nav>
+</main>
+<script>
+(() => {
+  const cv = document.getElementById("sky");
+  const gl = cv.getContext("webgl", { antialias: false, premultipliedAlpha: false });
+  if (!gl) return; // the CSS sky stays
+
+  const vs = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+  const fs = `
+precision highp float;
+uniform vec2 r; uniform float t;
+float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec3 pt(vec2 uv, vec2 c, vec3 col, float s, inout float w){ float d = length(uv - c); float k = 1.0 / (d * d * s + 0.035); w += k; return col * k; }
+void main(){
+  vec2 uv = gl_FragCoord.xy / r; float a = r.x / r.y; uv.x *= a;
+  float T = t * 0.07;
+  uv += 0.06 * vec2(sin(uv.y * 3.1 + T * 2.3), cos(uv.x * 2.7 - T * 1.9));
+  vec3 night = vec3(0.051, 0.082, 0.19), amber = vec3(1.0, 0.70, 0.12), coral = vec3(1.0, 0.37, 0.27),
+       rose = vec3(0.76, 0.20, 0.42), dusk = vec3(0.23, 0.17, 0.46);
+  float w = 0.0; vec3 c = vec3(0.0);
+  c += pt(uv, vec2(a * (0.22 + 0.10 * sin(T * 1.3)), 0.06 + 0.08 * cos(T * 1.1)), amber, 9.0, w);
+  c += pt(uv, vec2(a * (0.88 + 0.08 * cos(T * 0.9)), 0.30 + 0.10 * sin(T * 1.2)), coral, 10.0, w);
+  c += pt(uv, vec2(a * (0.55 + 0.18 * sin(T * 0.7)), 0.55 + 0.08 * cos(T * 1.6)), rose, 14.0, w);
+  c += pt(uv, vec2(a * (0.15 + 0.12 * cos(T * 0.8)), 0.62 + 0.10 * sin(T)), dusk, 12.0, w);
+  c += pt(uv, vec2(a * 0.5, 1.05), night, 3.2, w);
+  c += pt(uv, vec2(a * (0.9 + 0.05 * sin(T)), 0.95), night, 6.0, w);
+  c /= w;
+  float g = h(gl_FragCoord.xy + fract(t * 0.37) * 911.0) - 0.5;
+  c += g * 0.055;
+  c = pow(c, vec3(0.95));
+  gl_FragColor = vec4(c, 1.0);
+}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+  const pr = gl.createProgram();
+  gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs));
+  gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return;
+  gl.useProgram(pr);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, "p");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const uR = gl.getUniformLocation(pr, "r"), uT = gl.getUniformLocation(pr, "t");
+
+  // The gradient is soft: CSS pixel resolution is enough, the grain stays fine.
+  const fit = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2) * 0.75;
+    cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr);
+    gl.viewport(0, 0, cv.width, cv.height);
+  };
+  fit(); addEventListener("resize", fit);
+
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let raf = 0, t0 = performance.now();
+  const draw = (now) => {
+    gl.uniform2f(uR, cv.width, cv.height);
+    gl.uniform1f(uT, still ? 40 : (now - t0) / 1000 + 40);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (!still) raf = requestAnimationFrame(draw);
+  };
+  draw(t0);
+  document.addEventListener("visibilitychange", () => {
+    cancelAnimationFrame(raf);
+    if (!document.hidden && !still) raf = requestAnimationFrame(draw);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last"); the prompt is in the .prompt div.
+     Projects: in the four <a> links of this page (name, short line and #project-N address); the texts the panes type are in the `SCRIPT` object and in `STEPS`/`PIPE` of the script.
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 17 · Terminal — the page as a real TUI: a banner and four live processes, one per project.
+     Each pane writes its own log; tap it to open the project. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c10">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0c10; --fg: #d9dce3; --dim: #69707f; --soft: #9aa3b5; --line: #272c37;
+    --one: #f4a261; --anim: #e9c46a; --code: #6cb6ff; --four: #f472b6;
+    --fs: clamp(11.5px, 1.95svh, 14px);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #07080b; }
+  body {
+    display: flex; justify-content: center; overflow: hidden;
+    color: var(--fg); font-family: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  }
+  .tty {
+    position: relative; width: 100%; max-width: 480px; height: 100vh; height: 100dvh;
+    background: var(--bg);
+    display: grid; grid-template-rows: auto auto repeat(4, minmax(0, 1fr)) auto;
+    gap: clamp(6px, 1.15svh, 10px);
+    padding: max(10px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
+    font-size: var(--fs); line-height: 1.45;
+  }
+  /* soft light from above, like a real screen */
+  .tty::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 60% at 50% 0%, rgba(140, 160, 210, .07), transparent 60%);
+  }
+
+  .prompt { color: var(--soft); white-space: nowrap; overflow: hidden; padding: 0 2px; }
+  .prompt .u { color: #8bd5ca; } .prompt .p { color: var(--code); }
+  .prompt .cmd { color: var(--fg); }
+  .cur {
+    display: inline-block; width: .6em; height: 1.15em; margin-left: 1px; vertical-align: -.2em;
+    background: var(--fg); animation: blink 1.06s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .box { position: relative; border: 1px solid var(--line); border-radius: 7px; }
+  .legend {
+    position: absolute; top: -.78em; left: 9px; padding: 0 6px; background: var(--bg);
+    color: var(--dim); font-size: .92em; white-space: nowrap; line-height: 1.5;
+  }
+  .legend b { color: var(--c, var(--soft)); font-weight: 700; }
+
+  .banner { padding: clamp(12px, 2.1svh, 18px) 14px clamp(10px, 1.8svh, 15px); }
+  h1 {
+    margin: 0; font-weight: 800; letter-spacing: -.025em; line-height: 1.08;
+    font-size: clamp(20px, 6.15vw, 27px); color: #f3f4f7;
+  }
+  h1 span { display: block; }
+  h1 span + span { color: var(--soft); font-weight: 700; }
+
+  .pane {
+    --c: var(--soft);
+    display: flex; flex-direction: column; justify-content: space-between; min-height: 0;
+    padding: clamp(10px, 1.7svh, 14px) 12px clamp(7px, 1.2svh, 10px);
+    color: inherit; text-decoration: none; overflow: hidden;
+    transition: border-color .15s ease, background-color .15s ease, opacity .35s ease, transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .pane.live { border-color: color-mix(in srgb, var(--c) 38%, var(--line)); }
+  .pane:active { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, transparent); }
+  .pane.off { opacity: 0; transform: translateY(6px); }
+  .head { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .head img { width: 22px; height: 22px; border-radius: 50%; flex: none; object-fit: cover; background: #fff; }
+  .head img.pad { object-fit: contain; padding: 3px; }
+  .head strong { color: #fff; font-weight: 700; font-size: 1.12em; white-space: nowrap; }
+  .head em { font-style: normal; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .state { margin-left: auto; color: var(--c); white-space: nowrap; flex: none; }
+  .log {
+    color: var(--fg); min-height: 2.9em; max-height: 2.9em; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .log .q { color: var(--soft); }
+  .log .k { color: var(--c); }
+  .meter { color: var(--dim); white-space: nowrap; overflow: hidden; }
+  .meter .on { color: var(--c); }
+  .meter .hi { color: #0b0c10; background: var(--c); padding: 0 .25em; border-radius: 2px; }
+
+  .bar {
+    display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; overflow: hidden;
+    background: #141822; border-radius: 4px; padding: 2px 8px; color: var(--dim); font-size: .92em;
+  }
+  .bar .w { padding: 0 .3em; border-radius: 2px; }
+  .bar .w.on { color: #0b0c10; background: var(--c); }
+  .bar .clock { color: var(--soft); }
+
+  @media (max-height: 600px) {
+    .banner { padding-top: 10px; padding-bottom: 8px; }
+    .log { min-height: 1.45em; max-height: 1.45em; -webkit-line-clamp: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cur { animation: none; }
+    .pane { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main class="tty">
+  <div class="prompt" aria-hidden="true"><span class="u">name@host</span>:<span class="p">~/space</span>$ <span class="cmd" id="cmd"></span><span class="cur"></span></div>
+
+  <header class="box banner">
+    <span class="legend">─ <b>README</b> ─</span>
+    <h1><span>Your open space</span> <span>by First Last</span></h1>
+  </header>
+
+  <a class="box pane off" href="#project-1" style="--c: var(--one)" aria-label="Project one: a short line" data-k="one">
+    <span class="legend">─ <b>1:one</b> · category ─</span>
+    <span class="head"><img src="../assets/project-1.svg" alt=""><strong>Project one</strong><em>a short line</em><span class="state" data-state></span></span>
+    <span class="log" data-log aria-hidden="true"></span>
+    <span class="meter" data-meter aria-hidden="true"></span>
+  </a>
+
+  <a class="box pane off" href="#project-2" style="--c: var(--anim)" aria-label="Project two: a short line" data-k="anim">
+    <span class="legend">─ <b>2:two</b> · category ─</span>
+    <span class="head"><img class="pad" src="../assets/project-2.svg" alt=""><strong>Project two</strong><em>a short line</em><span class="state" data-state></span></span>
+    <span class="log" data-log aria-hidden="true"></span>
+    <span class="meter" data-meter aria-hidden="true"></span>
+  </a>
+
+  <a class="box pane off" href="#project-3" style="--c: var(--code)" aria-label="Project three: a short line" data-k="code">
+    <span class="legend">─ <b>3:three</b> · category ─</span>
+    <span class="head"><img class="pad" src="../assets/project-3.svg" alt=""><strong>Project three</strong><em>a short line</em><span class="state" data-state></span></span>
+    <span class="log" data-log aria-hidden="true"></span>
+    <span class="meter" data-meter aria-hidden="true"></span>
+  </a>
+
+  <a class="box pane off" href="#project-4" style="--c: var(--four)" aria-label="Project four: a short line" data-k="four">
+    <span class="legend">─ <b>4:four</b> · category ─</span>
+    <span class="head"><img src="../assets/project-4.svg" alt=""><strong>Project four</strong><em>a short line</em><span class="state" data-state></span></span>
+    <span class="log" data-log aria-hidden="true"></span>
+    <span class="meter" data-meter aria-hidden="true"></span>
+  </a>
+
+  <div class="bar" aria-hidden="true">
+    <span><span class="w" data-w="one" style="--c: var(--one)">1 one</span> <span class="w" data-w="anim" style="--c: var(--anim)">2 two</span> <span class="w" data-w="code" style="--c: var(--code)">3 three</span> <span class="w" data-w="four" style="--c: var(--four)">4 four</span></span>
+    <span class="clock" id="clock"></span>
+  </div>
+</main>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const SPIN = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
+  const BARS = "▁▂▃▄▅▆▇";
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+  // What each process writes: sample texts, replace them with your own.
+  const STEPS = ["the plan", "the draft", "the test", "the review", "the details", "the polish", "the fixes", "the delivery"];
+  const PIPE = ["microphone", "text", "assistant", "page", "voice"];
+  const SCRIPT = {
+    one: [
+      { t: "› Example question?", cls: "q", verb: "listens", cps: 40 },
+      { t: "Example answer: replace these lines with your own. And you, what do you think?", verb: "writes", cps: 26, hold: 2200 },
+      { t: "› Another example question?", cls: "q", verb: "listens", cps: 40 },
+      { t: "…rolls the dice on the next piece of a word", cls: "k", verb: "thinks", cps: 34, hold: 1400 },
+    ],
+    anim: STEPS.map((s, i) => ({ t: `card «Example title» → ${s}`, verb: i < 7 ? "edits" : "ready", cps: 48, step: i, hold: 900 })),
+    code: [
+      { t: "reads index.html", verb: "works", cps: 44, prog: 1 },
+      { t: "edits page.js: adds the filter «Example only»", verb: "works", cps: 44, prog: 2 },
+      { t: "opens the preview in the browser", verb: "tests", cps: 44, prog: 3 },
+      { t: "clicks the filter, takes a picture of the page", verb: "tests", cps: 44, prog: 4 },
+      { t: "Done. The page shows only the chosen items.", cls: "k", verb: "done", cps: 40, prog: 5, hold: 2200 },
+    ],
+    four: [
+      { t: "› «Show me yesterday's photos»", cls: "q", verb: "listens", cps: 36, pipe: 0 },
+      { t: "transcribes what you said", verb: "transcribes", cps: 44, pipe: 1 },
+      { t: "The assistant decides what to show you", verb: "thinks", cps: 44, pipe: 2 },
+      { t: "writes on the spot the page you need", verb: "writes", cps: 44, pipe: 3 },
+      { t: "shows it to you and says it", cls: "k", verb: "speaks", cps: 44, pipe: 4, hold: 1800 },
+    ],
+  };
+
+  const panes = [...document.querySelectorAll(".pane")].map((el, i) => ({
+    el, k: el.dataset.k, i,
+    log: el.querySelector("[data-log]"), meter: el.querySelector("[data-meter]"), state: el.querySelector("[data-state]"),
+    idx: 0, chars: 0, phase: "type", wait: 300 + i * 420, spin: i * 3, dice: [],
+  }));
+  const tabs = Object.fromEntries([...document.querySelectorAll("[data-w]")].map((w) => [w.dataset.w, w]));
+
+  function rollDice(p) { p.dice = Array.from({ length: 9 }, () => Math.floor(Math.random() * BARS.length)); p.pick = Math.floor(Math.random() * 9); }
+
+  function meter(p, line) {
+    if (p.k === "one") {
+      if (!p.dice.length) rollDice(p);
+      return "dice " + p.dice.map((b, j) => j === p.pick ? `<span class="on">${BARS[b]}</span>` : BARS[b]).join("");
+    }
+    if (p.k === "anim") {
+      const s = line.step, a = Math.max(0, Math.min(s - 1, STEPS.length - 3));
+      return STEPS.slice(a, a + 3).map((x, j) => a + j === s ? `<span class="hi">${esc(x)}</span>` : esc(x)).join(" ▸ ");
+    }
+    if (p.k === "code") {
+      const n = 22, done = Math.round(((line.prog - 1) + Math.min(1, p.chars / line.t.length)) / 5 * n);
+      return `<span class="on">${"█".repeat(done)}</span>${"░".repeat(n - done)}`;
+    }
+    return PIPE.map((x, j) => j === line.pipe ? `<span class="hi">${esc(x)}</span>` : j < line.pipe ? `<span class="on">${esc(x)}</span>` : esc(x)).join(" → ");
+  }
+
+  function draw(p) {
+    const line = SCRIPT[p.k][p.idx];
+    const shown = esc(line.t.slice(0, p.chars));
+    const caret = p.phase === "type" ? '<span class="k">▌</span>' : "";
+    p.log.innerHTML = `<span class="${line.cls || ""}">${shown}</span>${caret}`;
+    p.meter.innerHTML = meter(p, line);
+    const spin = line.verb === "done" || line.verb === "ready" ? "✓" : SPIN[p.spin % SPIN.length];
+    p.state.textContent = `${spin} ${line.verb}`;
+  }
+
+  function focus(k) {
+    for (const [key, w] of Object.entries(tabs)) w.classList.toggle("on", key === k);
+    for (const p of panes) p.el.classList.toggle("live", p.k === k);
+  }
+
+  // A single loop for all the panes: with the tab hidden, requestAnimationFrame stops by itself.
+  let last = 0, spinT = 0;
+  function tick(now) {
+    const dt = Math.min(100, now - (last || now));
+    last = now;
+    spinT += dt;
+    const spinStep = spinT > 80;
+    if (spinStep) spinT = 0;
+    for (const p of panes) {
+      const line = SCRIPT[p.k][p.idx];
+      if (spinStep) p.spin++;
+      if (p.wait > 0) { p.wait -= dt; if (spinStep) draw(p); continue; }
+      if (p.phase === "type") {
+        const before = Math.floor(p.chars);
+        p.chars = Math.min(line.t.length, p.chars + dt * line.cps / 1000);
+        if (p.k === "one" && Math.floor(p.chars / 4) !== Math.floor(before / 4)) rollDice(p);
+        if (p.chars >= line.t.length) { p.phase = "hold"; p.wait = line.hold || 700; }
+        draw(p);
+      } else {
+        p.idx = (p.idx + 1) % SCRIPT[p.k].length;
+        p.chars = 0; p.phase = "type";
+        focus(p.k);
+        draw(p);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+  document.addEventListener("visibilitychange", () => { last = 0; });
+
+  // Real clock
+  const clock = document.getElementById("clock");
+  const time = () => { clock.textContent = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); };
+  time(); setInterval(time, 15000);
+
+  // Start-up: the command is typed, then the four processes start one after another (about a second).
+  const cmd = document.getElementById("cmd");
+  const CMD = "./open --all";
+  if (reduce) {
+    cmd.textContent = CMD;
+    for (const p of panes) {
+      p.el.classList.remove("off");
+      const lines = SCRIPT[p.k];
+      p.idx = lines.length - 1; p.chars = lines[p.idx].t.length; p.phase = "hold";
+      draw(p);
+      p.state.textContent = lines[p.idx].verb;
+    }
+    focus("one");
+    return;
+  }
+  let c = 0;
+  const typeCmd = setInterval(() => {
+    cmd.textContent = CMD.slice(0, ++c);
+    if (c >= CMD.length) {
+      clearInterval(typeCmd);
+      panes.forEach((p, i) => setTimeout(() => { p.el.classList.remove("off"); draw(p); }, 90 + i * 110));
+      setTimeout(() => { focus("one"); requestAnimationFrame(tick); }, 520);
+    }
+  }, 34);
+})();
+</script>
+</body>
+</html>

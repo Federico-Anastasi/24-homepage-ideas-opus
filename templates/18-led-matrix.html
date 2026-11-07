@@ -1,0 +1,265 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title>, the <h1> and the `TITLE` array of the script (all capitals).
+     Projects: in the `APPS` array of the script and in the .zone links (#project-N addresses).
+     Icons: the `icon` field of `APPS` (files in ../assets/); `round` crops to a circle.
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 18 · LED matrix — the whole screen is a dot panel, like the ones at bus stops:
+     the title lights up dot by dot, and each of the four projects has its own zone with an LED-made icon and scrolling text. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050403">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #020202; }
+  body { display: flex; justify-content: center; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  .panel {
+    position: relative; width: 100%; max-width: 480px; height: 100vh; height: 100dvh;
+    background: radial-gradient(130% 90% at 50% 40%, #0b0806 0%, #050403 70%);
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  .stage { position: absolute; inset: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #glow { filter: blur(5px) saturate(1.3); opacity: .85; mix-blend-mode: screen; }
+  /* panel glass: a barely noticeable diagonal reflection */
+  .stage::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(115deg, rgba(255,255,255,.045) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 70%, rgba(255,255,255,.025) 100%);
+  }
+  .zone { position: absolute; left: 0; right: 0; display: block; color: transparent; text-decoration: none; }
+  .zone:focus-visible { outline: 2px solid #ffb020; outline-offset: -4px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main class="panel">
+  <h1 class="sr">Your open space by First Last</h1>
+  <div class="stage" id="stage">
+    <canvas id="off" aria-hidden="true"></canvas>
+    <canvas id="glow" aria-hidden="true"></canvas>
+    <canvas id="led" aria-hidden="true"></canvas>
+    <a class="zone" href="#project-1" data-z="0"><span class="sr">Project one: a short line</span></a>
+    <a class="zone" href="#project-2" data-z="1"><span class="sr">Project two: a short line</span></a>
+    <a class="zone" href="#project-3" data-z="2"><span class="sr">Project three: a short line</span></a>
+    <a class="zone" href="#project-4" data-z="3"><span class="sr">Project four: a short line</span></a>
+  </div>
+</main>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const stage = document.getElementById("stage");
+  const cOff = document.getElementById("off"), cLed = document.getElementById("led"), cGlow = document.getElementById("glow");
+  const xOff = cOff.getContext("2d"), xLed = cLed.getContext("2d"), xGlow = cGlow.getContext("2d");
+  const zonesEl = [...document.querySelectorAll(".zone")];
+
+  const COLS = 108;
+  const TITLE = ["YOUR OPEN", "SPACE BY", "FIRST LAST"];
+  const APPS = [
+    { name: "PROJECT ONE", say: "A SHORT LINE", icon: "project-1.svg", round: true },
+    { name: "PROJECT TWO", say: "A SHORT LINE", icon: "project-2.svg" },
+    { name: "PROJECT THREE", say: "A SHORT LINE", icon: "project-3.svg" },
+    { name: "PROJECT FOUR", say: "A SHORT LINE", icon: "project-4.svg" },
+  ];
+  const C_TITLE = [255, 238, 205], C_NAME = [255, 176, 40], C_SAY = [255, 92, 44], C_RULE = [120, 70, 20];
+
+  let W, H, dpr, pitch, rows, layoutData, buf, icons = [];
+  const raster = new Map();
+
+  // Text becomes dots: it is drawn small on a hidden canvas and one LED is lit for every filled pixel.
+  function rasterText(str) {
+    if (raster.has(str)) return raster.get(str);
+    const c = document.createElement("canvas"), x = c.getContext("2d");
+    x.font = "8px Silkscreen";
+    const w = Math.ceil(x.measureText(str).width) + 1, h = 10;
+    c.width = w; c.height = h;
+    x.font = "8px Silkscreen"; x.textBaseline = "top"; x.fillStyle = "#fff";
+    x.fillText(str, 0, 0);
+    const d = x.getImageData(0, 0, w, h).data;
+    let top = h, bottom = 0;
+    const bits = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) {
+      if (d[(y * w + i) * 4 + 3] > 110) { bits[y * w + i] = 1; top = Math.min(top, y); bottom = Math.max(bottom, y); }
+    }
+    let right = 0;
+    for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) if (bits[y * w + i]) right = Math.max(right, i);
+    const r = { w: right + 1, h: bottom - top + 1, top, stride: w, bits };
+    raster.set(str, r);
+    return r;
+  }
+
+  // The real icon, shrunk down to a few coloured LEDs.
+  function loadIcon(app, size) {
+    return new Promise((res) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas"); c.width = c.height = size;
+        const x = c.getContext("2d");
+        x.imageSmoothingQuality = "high";
+        x.drawImage(img, 0, 0, size, size);
+        const d = x.getImageData(0, 0, size, size).data;
+        const px = [];
+        for (let y = 0; y < size; y++) for (let i = 0; i < size; i++) {
+          const k = (y * size + i) * 4;
+          if (app.round) { const dx = i - size / 2 + .5, dy = y - size / 2 + .5; if (dx * dx + dy * dy > (size / 2) ** 2) continue; }
+          if (d[k + 3] < 90) continue;
+          // more light and more colour: an LED can't do dim tones
+          let r = d[k], g = d[k + 1], b = d[k + 2];
+          const m = Math.max(r, g, b, 1), boost = Math.min(2.2, 255 / m);
+          r = Math.min(255, r * boost * .92); g = Math.min(255, g * boost * .92); b = Math.min(255, b * boost * .92);
+          if (m < 40) continue; // black stays off
+          // rounded colours: fewer groups to draw each frame
+          px.push([i, y, [(r >> 4) << 4 | 8, (g >> 4) << 4 | 8, (b >> 4) << 4 | 8]]);
+        }
+        res(px);
+      };
+      img.onerror = () => res([]);
+      img.src = "../assets/" + app.icon;
+    });
+  }
+
+  function layout() {
+    const r = stage.getBoundingClientRect();
+    W = r.width; H = r.height; dpr = Math.min(2, devicePixelRatio || 1);
+    pitch = W / COLS; rows = Math.floor(H / pitch);
+    for (const c of [cOff, cLed, cGlow]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const lineH = rasterText("A").h + 4;
+    const m = 5, top = Math.max(5, Math.round(rows * .045));
+    const titleY = TITLE.map((_, i) => top + i * lineH);
+    const ruleY = top + TITLE.length * lineH + 3;
+    const zTop = ruleY + 4, zBottom = rows - 4;
+    const zh = Math.floor((zBottom - zTop) / 4);
+    const iconSize = Math.min(22, zh - 8);
+    const zones = APPS.map((a, i) => {
+      const y0 = zTop + i * zh;
+      const textX = m + iconSize + 6;
+      const block = lineH * 2 - 1;
+      const ty = y0 + Math.round((zh - block) / 2);
+      return { y0, y1: y0 + zh, iconX: m, iconY: y0 + Math.round((zh - iconSize) / 2), textX, nameY: ty, sayY: ty + lineH, avail: COLS - textX - m };
+    });
+    layoutData = { m, titleY, ruleY, zones, iconSize };
+    zonesEl.forEach((a, i) => { a.style.top = zones[i].y0 * pitch + "px"; a.style.height = (zones[i].y1 - zones[i].y0) * pitch + "px"; });
+    drawOff();
+  }
+
+  // The unlit LEDs are drawn only once.
+  function drawOff() {
+    xOff.setTransform(dpr, 0, 0, dpr, 0, 0);
+    xOff.clearRect(0, 0, W, H);
+    xOff.fillStyle = "#1e1610";
+    const rad = pitch * .34;
+    xOff.beginPath();
+    for (let y = 0; y < rows; y++) for (let x = 0; x < COLS; x++) {
+      const cx = (x + .5) * pitch, cy = (y + .5) * pitch;
+      xOff.moveTo(cx + rad, cy); xOff.arc(cx, cy, rad, 0, Math.PI * 2);
+    }
+    xOff.fill();
+  }
+
+  // Composing a frame: a colour map, one colour per lit LED.
+  const scroll = [0, 0, 0, 0], scrollName = [0, 0, 0, 0];
+  let pressed = -1, reveal = null, flick = 0;
+  function put(x, y, col) { if (x < 0 || y < 0 || x >= COLS || y >= rows) return; buf[y * COLS + x] = col; }
+  function text(str, x, y, col, maxW, offset) {
+    const r = rasterText(str);
+    const marquee = maxW && r.w > maxW;
+    const span = r.w + 18;
+    for (let yy = 0; yy < r.h; yy++) for (let xx = 0; xx < r.stride; xx++) {
+      if (!r.bits[(yy + r.top) * r.stride + xx]) continue;
+      if (!marquee) { put(x + xx, y + yy, col); continue; }
+      for (const rep of [0, span]) {
+        const px = xx + rep - (offset % span);
+        if (px >= 0 && px < maxW) put(x + px, y + yy, col);
+      }
+    }
+  }
+  function compose() {
+    buf = new Array(COLS * rows).fill(null);
+    const L = layoutData;
+    TITLE.forEach((t, i) => text(t, L.m, L.titleY[i], C_TITLE));
+    for (let x = L.m; x < COLS - L.m; x += 2) put(x, L.ruleY, C_RULE);
+    L.zones.forEach((z, i) => {
+      if (pressed === i) for (let y = z.y0 + 1; y < z.y1 - 1; y++) for (let x = 1; x < COLS - 1; x++) if ((x + y) % 2 === 0) put(x, y, [70, 40, 12]);
+      for (const [px, py, col] of icons[i] || []) put(z.iconX + px, z.iconY + py, col);
+      text(APPS[i].name, z.textX, z.nameY, C_NAME, z.avail, scrollName[i]);
+      text(APPS[i].say, z.textX, z.sayY, C_SAY, z.avail, scroll[i]);
+      // arrow that breathes on the right
+      if (i < 4 && Math.floor(flick / 12 + i) % 2 === 0) {
+        const ax = COLS - L.m - 2, ay = z.nameY + 1;
+        [[0, 0], [1, 1], [2, 2], [1, 3], [0, 4]].forEach(([dx, dy]) => put(ax + dx, ay + dy, [255, 176, 40]));
+      }
+      if (i < 3) for (let x = L.m; x < COLS - L.m; x += 3) put(x, z.y1 - 1, [60, 36, 14]);
+    });
+  }
+
+  function render(now) {
+    xLed.setTransform(dpr, 0, 0, dpr, 0, 0);
+    xLed.clearRect(0, 0, W, H);
+    const rad = pitch * .42;
+    const groups = new Map();
+    for (let y = 0; y < rows; y++) for (let x = 0; x < COLS; x++) {
+      const col = buf[y * COLS + x];
+      if (!col) continue;
+      if (reveal && reveal[y * COLS + x] > now) continue;
+      const key = col.join(",");
+      let p = groups.get(key);
+      if (!p) { p = new Path2D(); groups.set(key, p); }
+      const cx = (x + .5) * pitch, cy = (y + .5) * pitch;
+      p.moveTo(cx + rad, cy); p.arc(cx, cy, rad, 0, Math.PI * 2);
+    }
+    for (const [key, p] of groups) { xLed.fillStyle = `rgb(${key})`; xLed.fill(p); }
+    // the glow: the same image, blurred by CSS under the dots
+    xGlow.setTransform(1, 0, 0, 1, 0, 0);
+    xGlow.clearRect(0, 0, cGlow.width, cGlow.height);
+    xGlow.drawImage(cLed, 0, 0);
+  }
+
+  // Text that doesn't fit scrolls one LED at a time, like on real panels.
+  let last = 0, acc = 0, start = 0;
+  function loop(now) {
+    if (!start) start = now;
+    const dt = Math.min(100, now - (last || now)); last = now;
+    acc += dt;
+    let dirty = !!reveal;
+    while (acc >= 55) {
+      acc -= 55; flick++;
+      for (let i = 0; i < 4; i++) { scroll[i]++; scrollName[i]++; }
+      dirty = true;
+    }
+    if (reveal && now - start > 1100) reveal = null;
+    if (dirty) { compose(); render(now - start); }
+    requestAnimationFrame(loop);
+  }
+  document.addEventListener("visibilitychange", () => { last = 0; });
+
+  zonesEl.forEach((a, i) => {
+    a.addEventListener("pointerdown", () => { pressed = i; compose(); render(Infinity); });
+    const up = () => { if (pressed === i) { pressed = -1; compose(); render(Infinity); } };
+    a.addEventListener("pointerup", up); a.addEventListener("pointercancel", up); a.addEventListener("pointerleave", up);
+  });
+
+  let rt;
+  addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(async () => { layout(); icons = await Promise.all(APPS.map((a) => loadIcon(a, layoutData.iconSize))); compose(); render(Infinity); }, 120); });
+
+  (async () => {
+    const fontReady = document.fonts ? Promise.race([document.fonts.load("8px Silkscreen"), new Promise((r) => setTimeout(r, 1500))]) : Promise.resolve();
+    await fontReady;
+    layout();
+    icons = await Promise.all(APPS.map((a) => loadIcon(a, layoutData.iconSize)));
+    compose();
+    if (reduce) { render(Infinity); return; }
+    // power-on: each LED lights up at a different moment, from top to bottom with a bit of randomness
+    reveal = new Float32Array(COLS * rows);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < COLS; x++) reveal[y * COLS + x] = (y / rows) * 650 + Math.random() * 380;
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 24 · Acrylic blocks — four thick acrylic slabs resting on a moving color: they distort it at the edges,
+     split it like a prism and catch the light of the finger; inside, floating, the project name. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1324">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0e1324; color: #fff; -webkit-tap-highlight-color: transparent; }
+  #stage { position: fixed; top: 0; bottom: 0; left: 50%; width: min(100vw, 480px); transform: translateX(-50%); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  h1 {
+    position: absolute; z-index: 2; left: 24px; right: 24px; top: max(26px, calc(env(safe-area-inset-top) + 14px)); margin: 0;
+    font-family: "Bricolage Grotesque", system-ui, sans-serif; font-variation-settings: "opsz" 96;
+    font-weight: 800; font-size: clamp(32px, 9.6vw, 42px); line-height: .98; letter-spacing: -.025em;
+    text-shadow: 0 2px 30px rgba(10, 14, 30, .45); pointer-events: none;
+  }
+  h1 span { display: block; margin-top: .28em; font-weight: 500; font-size: .56em; letter-spacing: -.01em; color: rgba(255, 255, 255, .78); }
+  .blk {
+    position: absolute; z-index: 3; left: 0; top: 0; display: flex; align-items: center; justify-content: center;
+    color: #fff; text-decoration: none; border-radius: 30px; will-change: transform;
+  }
+  .blk .in { text-align: center; will-change: transform; font-family: "Bricolage Grotesque", system-ui, sans-serif; }
+  .blk img { width: 42px; height: 42px; margin: 0 auto 10px; display: block; border-radius: 50%; object-fit: cover;
+    box-shadow: 0 6px 18px rgba(10, 14, 30, .35); }
+  .blk img.pad { object-fit: contain; padding: 7px; background: rgba(255, 255, 255, .92); }
+  .blk b { display: block; font-size: clamp(19px, 5.4vw, 23px); font-weight: 800; letter-spacing: -.02em; line-height: 1.05;
+    text-shadow: 0 1px 2px rgba(10, 14, 30, .35), 0 6px 22px rgba(10, 14, 30, .4); }
+  .blk i { display: block; font-style: normal; font-size: 14px; font-weight: 500; margin-top: 4px; color: rgba(255, 255, 255, .86);
+    text-shadow: 0 1px 10px rgba(10, 14, 30, .5); }
+  .blk:active .in { transform: scale(.96) !important; }
+  .blk:focus-visible { outline: 2px solid #ffb21e; outline-offset: 4px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c" aria-hidden="true"></canvas>
+  <h1>Your open space <span>by First Last</span></h1>
+  <a class="blk" href="#project-1"><span class="in"><img src="../assets/project-1.svg" alt=""><b>Project one</b><i>a short line</i></span></a>
+  <a class="blk" href="#project-2"><span class="in"><img class="pad" src="../assets/project-2.svg" alt=""><b>Project<br>two</b><i>a short line</i></span></a>
+  <a class="blk" href="#project-3"><span class="in"><img class="pad" src="../assets/project-3.svg" alt=""><b>Project<br>three</b><i>a short line</i></span></a>
+  <a class="blk" href="#project-4"><span class="in"><img src="../assets/project-4.svg" alt=""><b>Project four</b><i>a short line</i></span></a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const stage = document.getElementById("stage");
+  const canvas = document.getElementById("c");
+  const blocks = [...document.querySelectorAll(".blk")];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
+  renderer.setPixelRatio(dpr);
+  const scene = new THREE.Scene();
+  const camera = new THREE.Camera();
+
+  const ROT = [-.052, .042, .036, -.046];
+  const uniforms = {
+    uRes: { value: new THREE.Vector2(1, 1) }, uDpr: { value: dpr }, uTime: { value: 0 }, uRad: { value: 30 },
+    uLight: { value: new THREE.Vector2(0, 0) },
+    uBox: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) },
+    uRot: { value: ROT.slice() },
+  };
+
+  const frag = `
+    precision highp float;
+    uniform vec2 uRes; uniform float uDpr, uTime, uRad; uniform vec2 uLight;
+    uniform vec4 uBox[4]; uniform float uRot[4];
+
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
+    float sdRB(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+
+    // The color under the slabs: four lights (amber, terracotta, blue, pink) drifting slowly, and thin lines
+    // that show how the acrylic bends the background.
+    vec3 bg(vec2 p) {
+      float a = uRes.x / uRes.y;
+      vec2 q = p / uRes.y;
+      float t = uTime * .07;
+      vec2 w = q + .07 * vec2(sin(q.y * 4.1 + t * 2.3), cos(q.x * 3.3 - t * 1.9));
+      vec3 col = vec3(.05, .065, .13);
+      vec2 c1 = vec2(a * (.28 + .16 * sin(t * 1.3)), .30 + .12 * cos(t * 1.1));
+      vec2 c2 = vec2(a * (.80 + .12 * cos(t * .9)), .52 + .14 * sin(t * 1.4));
+      vec2 c3 = vec2(a * (.35 + .18 * cos(t * .7 + 1.0)), .80 + .10 * sin(t * 1.2));
+      vec2 c4 = vec2(a * (.72 + .14 * sin(t * 1.1 + 2.0)), .16 + .08 * cos(t * .8));
+      col += vec3(1.0, .60, .10) * smoothstep(.56, 0.0, length(w - c1)) * .95;
+      col += vec3(.90, .32, .21) * smoothstep(.50, 0.0, length(w - c2)) * .85;
+      col += vec3(.14, .32, .86) * smoothstep(.62, 0.0, length(w - c3)) * 1.0;
+      col += vec3(1.0, .42, .70) * smoothstep(.40, 0.0, length(w - c4)) * .75;
+      float lines = smoothstep(.86, 1.0, abs(sin((w.x * .8 + w.y) * 90.0)));
+      col += lines * .045;
+      return col;
+    }
+
+    void main() {
+      vec2 p = vec2(gl_FragCoord.x, uRes.y * uDpr - gl_FragCoord.y) / uDpr;   // CSS pixels, y pointing down
+      vec3 col = bg(p);
+
+      // soft shadows under the slabs
+      float sh = 0.0;
+      for (int i = 0; i < 4; i++) {
+        vec2 lp = rot(uRot[i]) * (p - uBox[i].xy - vec2(-uLight.x * 8.0, 16.0 - uLight.y * 6.0));
+        float d = sdRB(lp, uBox[i].zw, uRad);
+        sh = max(sh, (1.0 - smoothstep(-12.0, 38.0, d)) * .5);
+      }
+      col *= 1.0 - sh;
+
+      vec2 L = normalize(vec2(-.55, -.85) + uLight * .7);
+      for (int i = 0; i < 4; i++) {
+        vec2 c = uBox[i].xy;
+        vec2 lp = rot(uRot[i]) * (p - c);
+        float d = sdRB(lp, uBox[i].zw, uRad);
+        if (d < 1.0) {
+          float e = 1.0;
+          vec2 g = vec2(sdRB(lp + vec2(e, 0.0), uBox[i].zw, uRad) - sdRB(lp - vec2(e, 0.0), uBox[i].zw, uRad),
+                        sdRB(lp + vec2(0.0, e), uBox[i].zw, uRad) - sdRB(lp - vec2(0.0, e), uBox[i].zw, uRad));
+          vec2 n = rot(-uRot[i]) * normalize(g + 1e-5);       // outward, in screen space
+          float bevel = 24.0;
+          float k = clamp(-d / bevel, 0.0, 1.0);
+          float edge = 1.0 - k;
+          float bend = edge * edge * edge;
+          vec2 base = c + (p - c) * .84;                       // the slab magnifies slightly
+          vec2 off = -n * bend * 46.0;                         // at the beveled edge the light bends
+          vec3 r;
+          r.r = bg(base + off * 1.00).r;
+          r.g = bg(base + off * 1.16 + n * 2.0).g;             // dispersion: the colors separate
+          r.b = bg(base + off * 1.34 + n * 4.0).b;
+          vec3 inside = r * vec3(.97, 1.0, 1.05) * 1.1 + .025;
+          float spec = pow(max(dot(n, -L), 0.0), 5.0) * edge;
+          float back = pow(max(dot(n, L), 0.0), 3.0) * edge * .25;
+          float rim = smoothstep(2.4, 0.0, -d);
+          float inner = smoothstep(1.4, 0.0, abs(-d - bevel)) * .16;
+          vec2 uvb = lp / uBox[i].zw;
+          float sw = (uvb.x * .7 + uvb.y * .5) - uLight.x * .9 + .2;
+          float sweep = exp(-sw * sw * 9.0) * .07 * k;
+          inside += vec3(1.0, .98, .95) * (spec * .95 + rim * .5 + inner + sweep) + vec3(.6, .7, 1.0) * back;
+          col = mix(col, inside, smoothstep(.8, -.8, d));
+        }
+      }
+      col += (hash(p + fract(uTime)) - .5) * .035;            // grain
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+    uniforms, fragmentShader: frag, depthTest: false, depthWrite: false,
+    vertexShader: "void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }",
+  }));
+  mesh.frustumCulled = false;
+  scene.add(mesh);
+
+  // ---------- Where the slabs sit ----------
+  const safe = { top: 0, bottom: 0 };
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)";
+  document.body.append(probe);
+  let W = 1, H = 1, base = [];
+  function layout() {
+    const cs = getComputedStyle(probe); safe.bottom = parseFloat(cs.paddingBottom) || 0;
+    W = stage.clientWidth; H = stage.clientHeight;
+    renderer.setSize(W, H, false);
+    uniforms.uRes.value.set(W, H);
+    const top = document.querySelector("h1").getBoundingClientRect().bottom + 30;
+    const bottom = H - Math.max(26, safe.bottom + 14);
+    const gx = 16, gy = 18, colW = (W - 44 - gx) / 2, rowH = (bottom - top - gy) / 2;
+    const hw = colW / 2, hh = Math.min(rowH / 2, colW * .78);
+    const y0 = top + (bottom - top) / 2 - (hh * 2 + gy) / 2;
+    base = [0, 1, 2, 3].map((i) => {
+      const col = i % 2, row = (i / 2) | 0, stagger = col ? 9 : -9;
+      return { x: 22 + hw + col * (colW + gx), y: y0 + hh + row * (hh * 2 + gy) + stagger, hw: hw - 2, hh: hh - 2 };
+    });
+    uniforms.uRad.value = Math.min(30, hw * .2);
+    apply();
+    render();
+  }
+
+  // ---------- Light and parallax from the finger ----------
+  const light = { x: -.25, y: -.3, tx: -.25, ty: -.3 };
+  let lastMove = -1e9;
+  addEventListener("pointermove", (e) => {
+    const r = stage.getBoundingClientRect();
+    light.tx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+    light.ty = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
+    lastMove = performance.now(); kick();
+  }, { passive: true });
+  addEventListener("pointerdown", (e) => { lastMove = performance.now(); }, { passive: true });
+
+  function apply() {
+    blocks.forEach((el, i) => {
+      const b = base[i], depth = 5 + i * 1.5;
+      const x = b.x + light.x * depth, y = b.y + light.y * depth * .7;
+      uniforms.uBox.value[i].set(x, y, b.hw, b.hh);
+      el.style.width = b.hw * 2 + "px"; el.style.height = b.hh * 2 + "px";
+      el.style.transform = `translate(${x - b.hw}px, ${y - b.hh}px) rotate(${ROT[i]}rad)`;
+      el.firstElementChild.style.transform = `translate(${-light.x * 5}px, ${-light.y * 4}px)`;   // the name sits deeper
+    });
+    uniforms.uLight.value.set(light.x, light.y);
+  }
+  function render() { renderer.render(scene, camera); }
+
+  let raf = 0, last = 0, t0 = performance.now();
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(.05, (now - last) / 1000 || .016); last = now;
+    const s = (now - t0) / 1000;
+    uniforms.uTime.value = s;
+    if (now - lastMove > 2500) {                       // with no finger, the light wanders on its own, slowly
+      light.tx = Math.sin(s * .35) * .6 - .1; light.ty = Math.cos(s * .27) * .45 - .2;
+    }
+    const f = 1 - Math.pow(.004, dt);
+    light.x += (light.tx - light.x) * f; light.y += (light.ty - light.y) * f;
+    apply(); render();
+  }
+  function kick() {
+    if (reduce) { apply(); render(); return; }
+    if (!raf && !document.hidden) { last = performance.now(); raf = requestAnimationFrame(frame); }
+  }
+  document.addEventListener("visibilitychange", () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else kick(); });
+  addEventListener("resize", layout);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(layout);
+  layout();
+  kick();
+})();
+</script>
+</body>
+</html>

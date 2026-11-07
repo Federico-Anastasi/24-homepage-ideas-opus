@@ -1,0 +1,91 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: this version uses no images: the projects are text only (the shapes are drawn in CSS).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 03 · Bauhaus: flat shapes and primary colors compose the page. Each project has its own shape:
+     Project one the circle (a face), Project two the triangle (play), Project three the square (blocks), Project four the quarter circle (a screen). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #e1251b;
+    --blue: #1c4c9e;
+    --yellow: #f6c11a;
+    --black: #121212;
+    --pad: clamp(14px, 4.6vw, 22px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #fff; color: var(--black); }
+  body { font-family: "Jost", "Futura", "Century Gothic", sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+
+  main {
+    height: 100svh; max-width: 480px; margin: 0 auto;
+    display: grid; grid-template-rows: 1fr auto;
+    padding: max(var(--pad), env(safe-area-inset-top)) var(--pad) max(var(--pad), env(safe-area-inset-bottom));
+  }
+
+  /* The title: bottom left of its area, held up by a black bar and a red dot */
+  header { position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: clamp(12px, 2.4svh, 22px); }
+  h1 { font-weight: 800; font-size: min(11vw, 6.3svh, 52px); line-height: .96; letter-spacing: -.015em; max-width: 9.5em; padding-right: clamp(36px, 11vw, 52px); }
+  header::before { content: ""; position: absolute; top: 0; right: 0; width: clamp(28px, 9vw, 42px); aspect-ratio: 1; border-radius: 50%; background: var(--red); }
+  header::after { content: ""; display: block; width: 46%; height: 9px; background: var(--black); margin-top: clamp(10px, 2svh, 18px); }
+
+  /* The composition: four touching squares, like a board */
+  .board { display: grid; grid-template-columns: 1fr 1fr; width: 100%; aspect-ratio: 1; max-height: 62svh; justify-self: center; }
+  @supports (aspect-ratio: 1) { .board { width: min(100%, 62svh); } }
+  .tile { position: relative; overflow: hidden; display: block; text-decoration: none; color: inherit; transition: filter .12s ease; }
+  .tile:active { filter: brightness(.92); }
+  .tile:focus-visible { outline: 4px solid var(--black); outline-offset: -4px; z-index: 2; }
+  .label { position: absolute; z-index: 1; line-height: 1; }
+  .name { display: block; font-weight: 700; font-size: clamp(17px, 5vw, 22px); letter-spacing: -.005em; }
+  .say { display: block; margin-top: 3px; font-weight: 500; font-size: clamp(11px, 3.2vw, 13px); }
+
+  /* Project one: cerchio rosso su blu */
+  .one { background: var(--blue); color: #fff; }
+  .one::before { content: ""; position: absolute; width: 74%; aspect-ratio: 1; border-radius: 50%; background: var(--red); right: -6%; top: -6%; }
+  .one .label { left: 10%; bottom: 10%; }
+
+  /* Project two: triangolo nero su giallo, punta a destra */
+  .anim { background: var(--yellow); }
+  .anim::before { content: ""; position: absolute; left: 14%; top: 12%; width: 60%; height: 60%; background: var(--black); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+  .anim .label { right: 9%; bottom: 10%; text-align: right; }
+
+  /* Project three: yellow squares stacked on black, like lines of code */
+  .code { background: var(--black); color: #fff; }
+  .code::before {
+    content: ""; position: absolute; left: 10%; top: 12%; width: 56%; height: 44%;
+    background:
+      linear-gradient(var(--yellow), var(--yellow)) 0 0 / 100% 22% no-repeat,
+      linear-gradient(var(--yellow), var(--yellow)) 0 39% / 68% 22% no-repeat,
+      linear-gradient(var(--red), var(--red)) 0 78% / 40% 22% no-repeat;
+  }
+  .code .label { left: 10%; bottom: 10%; }
+
+  /* Project four: white quarter circle on red, like a screen lighting up from the corner */
+  .four { background: var(--red); color: #fff; }
+  .four::before { content: ""; position: absolute; left: 0; bottom: 0; width: 82%; height: 82%; background: #fff; border-top-right-radius: 100%; }
+  .four .label { right: 9%; top: 11%; text-align: right; }
+  .four::after { content: ""; position: absolute; left: 12%; bottom: 12%; width: 18%; aspect-ratio: 1; border-radius: 50%; background: var(--blue); }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Your open space by First Last</h1></header>
+  <nav class="board" aria-label="Projects">
+    <a class="tile one" href="#project-1"><span class="label"><span class="name">Project one</span><span class="say">Category</span></span></a>
+    <a class="tile anim" href="#project-2"><span class="label"><span class="name">Project<br>two</span><span class="say">Category</span></span></a>
+    <a class="tile code" href="#project-3"><span class="label"><span class="name">Project<br>three</span><span class="say">Category</span></span></a>
+    <a class="tile four" href="#project-4"><span class="label"><span class="name">Project<br>four</span><span class="say">Category</span></span></a>
+  </nav>
+</main>
+</body>
+</html>

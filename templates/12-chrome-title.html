@@ -1,0 +1,272 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title>, the <h1>, the <b> inside #flat and the `lines` array of the script (the title is drawn on a canvas).
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the `icons` array of the script loads ../assets/project-N.svg; `roundIcon` says which ones are cropped to a circle.
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 3D chrome title: the title is an embossed chrome slab reflecting a photo studio (PMREM),
+     below, the four projects are four floating tokens of polished metal; on touch the token comes toward you. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0d10">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo+Narrow:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: "Archivo Narrow", "Arial Narrow", sans-serif; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+    background: radial-gradient(120% 75% at 50% 18%, #33373e 0%, #16181c 55%, #0a0b0d 100%);
+    color: #e9ecf0;
+  }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* The labels under the tokens: the script positions them by projecting the 3D onto the screen */
+  .tag {
+    position: fixed; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    text-decoration: none; color: inherit; min-width: 44px; min-height: 44px; will-change: transform;
+  }
+  .tag .name { font-weight: 700; font-size: 19px; line-height: 1; text-align: center; white-space: nowrap; color: #f2f4f7;
+    text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 18px rgba(0,0,0,.6); }
+  .tag .word { margin-top: 4px; font-weight: 500; font-size: 14px; line-height: 1; color: #a9b0b9; white-space: nowrap; }
+
+  /* Without WebGL: the same composition, static */
+  .flat { display: none; position: fixed; inset: 0; padding: 28px 22px; flex-direction: column; gap: 22px; }
+  .flat.on { display: flex; }
+  .flat b { font-family: "Archivo Black", sans-serif; font-size: 40px; line-height: .95;
+    background: linear-gradient(180deg,#fff,#cfd4da 40%,#4a5058 52%,#e8ebee 70%,#9aa1a9); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .flat a { color: #e9ecf0; font-size: 22px; font-weight: 700; text-decoration: none; padding: 10px 0; border-top: 1px solid #3a3f46; }
+  @media (max-height: 600px) { .tag .word { display: none; } }
+</style>
+</head>
+<body>
+<h1>Your open space by First Last</h1>
+<canvas id="c" aria-hidden="true"></canvas>
+
+<a class="tag" data-i="0" href="#project-1"><span class="name">Project one</span><span class="word">a short line</span></a>
+<a class="tag" data-i="1" href="#project-2"><span class="name">Project two</span><span class="word">a short line</span></a>
+<a class="tag" data-i="2" href="#project-3"><span class="name">Project three</span><span class="word">a short line</span></a>
+<a class="tag" data-i="3" href="#project-4"><span class="name">Project four</span><span class="word">a short line</span></a>
+
+<div class="flat" id="flat"><b>Your open space by First Last</b></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(async () => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const tags = [...document.querySelectorAll(".tag")];
+  const flat = document.getElementById("flat");
+  function fallback() {
+    flat.classList.add("on");
+    tags.forEach((t) => { t.style.position = "static"; t.style.transform = "none"; flat.append(t); });
+  }
+  if (!window.THREE) return fallback();
+  const canvas = document.getElementById("c");
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { return fallback(); }
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  camera.position.set(0, 0, 12);
+
+  // ---- The photo studio the chrome reflects: light panels in a dark room ----
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const studio = new THREE.Scene();
+  studio.add(new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), new THREE.MeshBasicMaterial({ color: 0x15171a, side: THREE.BackSide })));
+  function panel(w, h, color, k, pos, look) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(k), side: THREE.DoubleSide }));
+    m.position.set(...pos); m.lookAt(...look); studio.add(m);
+  }
+  panel(12, 3, 0xffffff, 4.0, [0, 9, 0], [0, 0, 0]);       // softbox above
+  panel(1.4, 14, 0xe8f0ff, 3.0, [8.5, 0, 2], [0, 0, 0]);    // right strip
+  panel(1.0, 12, 0xf2f5ff, 1.8, [-8.5, 1, 3], [0, 0, 0]);   // left strip
+  panel(16, 4, 0xffb46a, 0.9, [0, -9, 2], [0, 0, 0]);       // warm bounce from the floor
+  panel(5, 5, 0xffffff, 2.2, [0, 2, 9.5], [0, 0, 0]);       // panel behind the camera
+  const env = pmrem.fromScene(studio, 0.035).texture;
+  scene.environment = env;
+
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0.08 });
+
+  // ---- The title: text drawn in canvas, turned into relief (normal map) and cut out ----
+  await document.fonts.load('400 120px "Archivo Black"').catch(() => {});
+  const TW = 1024, TH = 700;
+  const lines = ["Your open", "space by", "First", "Last"];
+  const tc = document.createElement("canvas"); tc.width = TW; tc.height = TH;
+  const tx = tc.getContext("2d");
+  tx.fillStyle = "#000"; tx.fillRect(0, 0, TW, TH);
+  tx.fillStyle = "#fff"; tx.textBaseline = "alphabetic";
+  let size = 150;
+  tx.font = `400 ${size}px "Archivo Black", "Arial Black", sans-serif`;
+  const widest = Math.max(...lines.map((l) => tx.measureText(l).width));
+  size = Math.floor(size * Math.min(1, (TW - 60) / widest));
+  tx.font = `400 ${size}px "Archivo Black", "Arial Black", sans-serif`;
+  const lh = size * 0.98, top = (TH - lh * lines.length) / 2 + size * 0.8;
+  lines.forEach((l, i) => tx.fillText(l, 30, top + i * lh));
+
+  const src = tx.getImageData(0, 0, TW, TH).data;
+  const alpha = new Float32Array(TW * TH);
+  for (let i = 0; i < TW * TH; i++) alpha[i] = src[i * 4] / 255;
+  // soft relief: two box-blur passes
+  function blur(a, r) {
+    const tmp = new Float32Array(a.length), out = new Float32Array(a.length), n = 2 * r + 1;
+    for (let y = 0; y < TH; y++) { let s = 0; const o = y * TW;
+      for (let x = -r; x <= r; x++) s += a[o + Math.min(TW - 1, Math.max(0, x))];
+      for (let x = 0; x < TW; x++) { tmp[o + x] = s / n; s += a[o + Math.min(TW - 1, x + r + 1)] - a[o + Math.max(0, x - r)]; } }
+    for (let x = 0; x < TW; x++) { let s = 0;
+      for (let y = -r; y <= r; y++) s += tmp[Math.min(TH - 1, Math.max(0, y)) * TW + x];
+      for (let y = 0; y < TH; y++) { out[y * TW + x] = s / n; s += tmp[Math.min(TH - 1, y + r + 1) * TW + x] - tmp[Math.max(0, y - r) * TW + x]; } }
+    return out;
+  }
+  const h = blur(blur(alpha, 5), 3);
+  const nc = document.createElement("canvas"); nc.width = TW; nc.height = TH;
+  const nx = nc.getContext("2d"), nimg = nx.createImageData(TW, TH), K = 7;
+  for (let y = 0; y < TH; y++) for (let x = 0; x < TW; x++) {
+    const i = y * TW + x;
+    const dx = (h[y * TW + Math.min(TW - 1, x + 1)] - h[y * TW + Math.max(0, x - 1)]) * K;
+    const dy = (h[Math.min(TH - 1, y + 1) * TW + x] - h[Math.max(0, y - 1) * TW + x]) * K;
+    const l = Math.hypot(dx, dy, 1);
+    nimg.data[i * 4] = (-dx / l * 0.5 + 0.5) * 255;
+    nimg.data[i * 4 + 1] = (dy / l * 0.5 + 0.5) * 255;
+    nimg.data[i * 4 + 2] = (1 / l * 0.5 + 0.5) * 255;
+    nimg.data[i * 4 + 3] = 255;
+  }
+  nx.putImageData(nimg, 0, 0);
+
+  const alphaTex = new THREE.CanvasTexture(tc);
+  const normalTex = new THREE.CanvasTexture(nc);
+  const titleMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff, metalness: 1, roughness: 0.1, normalMap: normalTex, normalScale: new THREE.Vector2(1.2, 1.2),
+    alphaMap: alphaTex, alphaTest: 0.5, transparent: false,
+  });
+  const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: alphaTex, transparent: true, opacity: 0.55, depthWrite: false });
+  const titleGeo = new THREE.PlaneGeometry(1, TH / TW);
+  const title = new THREE.Group();
+  const titleFace = new THREE.Mesh(titleGeo, titleMat);
+  const titleShadow = new THREE.Mesh(titleGeo, shadowMat);
+  titleShadow.position.set(0.012, -0.02, -0.03);
+  title.add(titleShadow, titleFace);
+  scene.add(title);
+
+  // ---- The four tokens: chrome rim, face with the icon under a glossy lacquer ----
+  const icons = ["project-1.svg", "project-2.svg", "project-3.svg", "project-4.svg"];
+  const roundIcon = [true, false, false, false];
+  const load = (src) => new Promise((ok) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = src; });
+  const imgs = await Promise.all(icons.map((n) => load("../assets/" + n)));
+  const coins = imgs.map((im, i) => {
+    const c = document.createElement("canvas"); c.width = c.height = 512;
+    const x = c.getContext("2d");
+    const g = x.createRadialGradient(256, 200, 40, 256, 256, 256);
+    g.addColorStop(0, "#fafbfc"); g.addColorStop(1, "#cfd4da");
+    x.fillStyle = g; x.fillRect(0, 0, 512, 512);
+    if (im) {
+      x.save(); x.beginPath(); x.arc(256, 256, 214, 0, Math.PI * 2); x.clip();
+      if (roundIcon[i]) x.drawImage(im, 42, 42, 428, 428);
+      else x.drawImage(im, 116, 116, 280, 280);
+      x.restore();
+    }
+    x.lineWidth = 10; x.strokeStyle = "rgba(0,0,0,.18)"; x.beginPath(); x.arc(256, 256, 219, 0, Math.PI * 2); x.stroke();
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+    const face = new THREE.MeshPhysicalMaterial({ map: tex, metalness: 0.15, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06 });
+    const geo = new THREE.CylinderGeometry(1, 1, 0.24, 96, 1);
+    geo.rotateX(Math.PI / 2);
+    const mesh = new THREE.Mesh(geo, [chrome, face, chrome]);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.075, 24, 120), chrome);
+    rim.position.z = 0.12;
+    const grp = new THREE.Group(); grp.add(mesh, rim);
+    grp.userData = { phase: i * 1.7, base: new THREE.Vector3(), lift: 0 };
+    scene.add(grp);
+    return grp;
+  });
+
+  // ---- Layout: adapts to phone (portrait) and desktop screens ----
+  let W = 1, H = 1, coinR = 1;
+  function layout() {
+    const w = innerWidth, hh = innerHeight;
+    renderer.setSize(w, hh, false);
+    camera.aspect = w / hh; camera.updateProjectionMatrix();
+    H = 2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    W = H * camera.aspect;
+    const usableW = Math.min(W, H * 0.75);          // on desktop it stays a single column
+    const tw = usableW * 0.9;
+    title.scale.set(tw, tw, 1);
+    const th = tw * (TH / TW);
+    title.position.set(0, H / 2 - th / 2 - H * 0.05, 0);
+    const restTop = H / 2 - th - H * 0.08, restBottom = -H / 2 + H * 0.06;
+    const rowH = (restTop - restBottom) / 2;
+    coinR = Math.min(usableW * 0.17, rowH * 0.3);
+    const xs = usableW * 0.24;
+    coins.forEach((g, i) => {
+      const col = i % 2, row = Math.floor(i / 2);
+      const y = restTop - rowH * (row + 0.42) - (col ? rowH * 0.16 : 0);
+      g.userData.base.set(col ? xs : -xs, y, 0);
+      g.scale.setScalar(coinR);
+    });
+  }
+  layout();
+  addEventListener("resize", layout);
+
+  // ---- Finger and touch ----
+  let mx = 0, my = 0, tmx = 0, tmy = 0, touched = false;
+  addEventListener("pointermove", (e) => { touched = true; tmx = e.clientX / innerWidth - 0.5; tmy = e.clientY / innerHeight - 0.5; }, { passive: true });
+  let going = null;
+  tags.forEach((t) => t.addEventListener("click", (e) => {
+    if (reduce) return;
+    e.preventDefault();
+    if (going) return;
+    going = { i: +t.dataset.i, t0: performance.now(), href: t.href };
+  }));
+
+  const v = new THREE.Vector3();
+  let raf = 0; const t0 = performance.now();
+  function frame(now) {
+    const t = (now - t0) / 1000;
+    if (!touched) { tmx = Math.sin(t * 0.3) * 0.35; tmy = Math.sin(t * 0.21) * 0.15; }
+    mx += (tmx - mx) * 0.06; my += (tmy - my) * 0.06;
+
+    title.rotation.y = Math.sin(t * 0.32) * 0.16 + mx * 0.45;
+    title.rotation.x = Math.sin(t * 0.25) * 0.06 + my * 0.3;
+
+    coins.forEach((g, i) => {
+      const d = g.userData;
+      const k = going && going.i === i ? Math.min(1, (now - going.t0) / 420) : 0;
+      const e = k * k * (3 - 2 * k);
+      g.position.set(d.base.x * (1 - e), d.base.y + Math.sin(t * 1.1 + d.phase) * coinR * 0.08 + (0 - d.base.y) * e * 0.4, e * 6);
+      g.rotation.y = Math.sin(t * 0.7 + d.phase) * 0.42 + mx * 0.6 + e * Math.PI * 2;
+      g.rotation.x = Math.sin(t * 0.5 + d.phase) * 0.18 + my * 0.4;
+      // the label follows the token, just below its edge
+      v.set(g.position.x, g.position.y - coinR * 1.12, g.position.z).project(camera);
+      const sx = (v.x * 0.5 + 0.5) * innerWidth, sy = (-v.y * 0.5 + 0.5) * innerHeight;
+      v.set(g.position.x, g.position.y, g.position.z).project(camera);
+      const cy = (-v.y * 0.5 + 0.5) * innerHeight;
+      const tag = tags[i];
+      const box = Math.max(88, (sy - cy) * 2);
+      tag.style.width = box + "px";
+      tag.style.height = (sy - cy) + box / 2 + 34 + "px";
+      tag.style.transform = `translate(${sx - box / 2}px, ${cy - box / 2}px)`;
+      tag.style.opacity = 1 - e;
+    });
+    renderer.render(scene, camera);
+    if (going && now - going.t0 > 460) { const href = going.href; going = null; location.href = href; }
+    if (!reduce) raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+  if (reduce) addEventListener("resize", () => requestAnimationFrame(frame));
+  document.addEventListener("visibilitychange", () => {
+    cancelAnimationFrame(raf);
+    if (!document.hidden && !reduce) raf = requestAnimationFrame(frame);
+  });
+  // when coming back from the project page, the token is back in place
+  addEventListener("pageshow", () => { going = null; });
+})();
+</script>
+</body>
+</html>

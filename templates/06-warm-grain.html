@@ -1,0 +1,109 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1>, split in several elements around the word "open" (search for "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 06 · Warm grain — film light: soft gradients that breathe, lively grain, huge editorial typography in Bodoni.
+     The four projects are four different bands of light, like frames exposed with different filters. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140b08">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,800;1,6..96,500;1,6..96,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #140b08; --cream: #fff4e6;
+    --serif: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--cream); }
+  body { -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  body::before { /* a warm light coming in from the top, breathing */
+    content: ""; position: fixed; inset: -20%; pointer-events: none;
+    background: radial-gradient(60% 40% at 30% 10%, rgba(255, 150, 70, .28), transparent 70%),
+                radial-gradient(50% 35% at 85% 0%, rgba(255, 90, 80, .18), transparent 70%);
+    animation: breathe 9s ease-in-out infinite alternate;
+  }
+  @keyframes breathe { from { opacity: .65; transform: translateY(0) scale(1); } to { opacity: 1; transform: translateY(2%) scale(1.06); } }
+
+  .stage {
+    position: fixed; inset: 0; margin: 0 auto; max-width: 480px;
+    display: flex; flex-direction: column;
+    padding: max(20px, env(safe-area-inset-top)) 0 max(14px, env(safe-area-inset-bottom));
+  }
+  h1 { margin: 0; padding: 0 20px; font-family: var(--serif); font-weight: 800; font-variation-settings: "opsz" 96;
+       font-size: clamp(50px, 10.4svh, 76px); line-height: .86; letter-spacing: -.035em; }
+  h1 em { font-style: italic; font-weight: 500; }
+  h1 small { display: block; margin-top: .32em; font-family: var(--serif); font-style: italic; font-weight: 500;
+             font-size: .34em; line-height: 1.1; letter-spacing: 0; opacity: .82; }
+
+  .bands { flex: 1; min-height: 0; margin-top: clamp(16px, 3svh, 26px); display: flex; flex-direction: column; gap: 3px; }
+  .band {
+    position: relative; flex: 1; min-height: 52px; overflow: hidden; text-decoration: none; color: #1b0f0a;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 0 20px;
+    background: var(--g); background-size: 160% 160%;
+    animation: drift var(--d) ease-in-out infinite alternate;
+    transition: filter .25s ease, transform .2s cubic-bezier(.2, .8, .2, 1);
+  }
+  .band::before { /* the spot of light breathing inside the band */
+    content: ""; position: absolute; inset: -40%; pointer-events: none; mix-blend-mode: soft-light;
+    background: radial-gradient(35% 60% at var(--x, 30%) 50%, rgba(255, 255, 255, .85), transparent 70%);
+    animation: glow var(--d) ease-in-out infinite alternate;
+  }
+  .band:active { filter: brightness(1.12) saturate(1.15); transform: scaleY(.97); }
+  @keyframes drift { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+  @keyframes glow { from { transform: translateX(-12%); opacity: .55; } to { transform: translateX(14%); opacity: 1; } }
+  .b1 { --g: linear-gradient(100deg, #ffd27a, #ff9e4a 45%, #ff7a5c); --d: 7s; --x: 22%; }
+  .b2 { --g: linear-gradient(100deg, #ffb35c, #ff6f61 50%, #e2466f); --d: 9s; --x: 70%; }
+  .b3 { --g: linear-gradient(100deg, #f06a7a, #b64686 50%, #6c3d8f); --d: 8s; --x: 35%; color: var(--cream); }
+  .b4 { --g: linear-gradient(100deg, #7a3f8c, #3d2f77 50%, #20265a); --d: 10s; --x: 80%; color: var(--cream); }
+  .ico { position: relative; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(255, 244, 230, .7); }
+  .ico.flat { object-fit: contain; background: var(--cream); padding: 7px; }
+  .name { position: relative; font-family: var(--serif); font-style: italic; font-weight: 700; font-variation-settings: "opsz" 60;
+          font-size: clamp(25px, 4.6svh, 34px); line-height: 1; letter-spacing: -.015em; }
+  .say { position: relative; font-family: var(--sans); font-size: 13px; font-weight: 600; text-align: right; opacity: .78; max-width: 9em; line-height: 1.2; }
+
+  /* The grain: a noise tile that jumps like film */
+  .grain { position: fixed; inset: -50%; pointer-events: none; z-index: 3; opacity: .2; mix-blend-mode: overlay;
+           background-size: 180px 180px; animation: jitter .9s steps(6) infinite; }
+  @keyframes jitter {
+    0% { transform: translate(0, 0); } 17% { transform: translate(-6%, 4%); } 33% { transform: translate(5%, -7%); }
+    50% { transform: translate(-3%, 8%); } 67% { transform: translate(8%, 2%); } 83% { transform: translate(-7%, -4%); } 100% { transform: translate(2%, 6%); }
+  }
+  .vignette { position: fixed; inset: 0; pointer-events: none; z-index: 2;
+              background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(10, 4, 2, .55)); }
+  @media (max-height: 600px) { .say { display: none; } .ico { width: 34px; height: 34px; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; } }
+</style>
+</head>
+<body>
+<main class="stage">
+  <h1>Your <em>open</em> space <small>by First Last</small></h1>
+  <nav class="bands" aria-label="Projects">
+    <a class="band b1" href="#project-1"><img class="ico" src="../assets/project-1.svg" alt=""><span class="name">Project one</span><span class="say">a short line</span></a>
+    <a class="band b2" href="#project-2"><img class="ico flat" src="../assets/project-2.svg" alt=""><span class="name">Project two</span><span class="say">a short line</span></a>
+    <a class="band b3" href="#project-3"><img class="ico flat" src="../assets/project-3.svg" alt=""><span class="name">Project three</span><span class="say">a short line</span></a>
+    <a class="band b4" href="#project-4"><img class="ico" src="../assets/project-4.svg" alt=""><span class="name">Project four</span><span class="say">a short line</span></a>
+  </nav>
+</main>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" id="grain" aria-hidden="true"></div>
+<script>
+// A single noise tile, generated here: very cheap, and stays smooth on iPhone.
+(() => {
+  const c = document.createElement("canvas"); c.width = c.height = 180;
+  const x = c.getContext("2d"), d = x.createImageData(180, 180);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255 | 0; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  document.getElementById("grain").style.backgroundImage = `url(${c.toDataURL()})`;
+  // CSS animations pause on their own when the page is not visible
+})();
+</script>
+</body>
+</html>

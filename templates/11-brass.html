@@ -1,0 +1,200 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- Brass and enamel: the buzzer panel of an Italian front door. A polished brass plate with the title engraved in Bodoni,
+     four enamel nameplates (one per project) each with its button; the warm reflection follows the finger. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1915">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600;6..96,700;6..96,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lx: 40%; --ly: 20%;   /* the warm reflection, follows the finger */
+    --font: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: var(--font); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+    /* the entrance hall wall: dark, grainy stone */
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .78  0 0 0 0 .70  0 0 0 0 .60  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23s)'/></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='3' seed='9'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>"),
+      radial-gradient(120% 80% at 50% 10%, #3a332b 0%, #221d18 55%, #14110e 100%);
+  }
+
+  .stage {
+    position: fixed; inset: 0; margin: 0 auto; max-width: 480px;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    display: flex;
+  }
+
+  /* ---- The buzzer panel: a slab of polished brass ---- */
+  .panel {
+    position: relative; flex: 1; border-radius: 18px; padding: clamp(22px, 4svh, 34px) 20px clamp(16px, 3svh, 24px);
+    display: grid; grid-template-rows: auto 1fr auto; gap: clamp(12px, 2.4svh, 20px);
+    background:
+      radial-gradient(60% 45% at var(--lx) var(--ly), rgba(255,246,214,.75), rgba(255,236,180,0) 70%),
+      linear-gradient(160deg, #f6d98a 0%, #c99a3c 22%, #f3d27e 38%, #a77622 56%, #e2b85a 74%, #8f6419 100%);
+    box-shadow:
+      0 2px 0 rgba(255,244,205,.85) inset, 0 -3px 0 rgba(80,52,10,.55) inset,
+      2px 0 0 rgba(255,238,190,.4) inset, -2px 0 0 rgba(90,60,12,.45) inset,
+      0 0 0 1px #5b3f0e, 0 30px 50px -18px rgba(0,0,0,.9), 0 8px 14px rgba(0,0,0,.55);
+  }
+  /* polishing micro-scratches */
+  .panel::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: .35; mix-blend-mode: soft-light;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9 .04' numOctaves='2' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  }
+
+  .screw {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #fff3cf 0%, #e6bf62 35%, #9c6f1f 75%, #5a3e0b 100%);
+    box-shadow: 0 1px 0 rgba(255,240,200,.7), 0 -1px 1px rgba(60,38,6,.6), 0 2px 3px rgba(60,38,6,.6) inset;
+  }
+  .screw::after {
+    content: ""; position: absolute; left: 2px; right: 2px; top: 6px; height: 2px; border-radius: 1px;
+    background: #4e360b; box-shadow: 0 .7px 0 rgba(255,240,200,.6); transform: rotate(var(--a, 30deg));
+  }
+  .screw.tl { top: 10px; left: 10px; } .screw.tr { top: 10px; right: 10px; }
+  .screw.bl { bottom: 10px; left: 10px; } .screw.br { bottom: 10px; right: 10px; }
+
+  /* Engraving filled with black enamel, with a thin line of brass light on the lower edge */
+  .engraved { color: #1d140a; text-shadow: 0 1px 0 rgba(255,241,200,.7), 0 -1px 0 rgba(80,50,8,.45); }
+  h1 {
+    margin: 0; text-align: center; font-weight: 700; font-size: clamp(30px, 8.6vw, 40px); line-height: 1.02;
+    font-variation-settings: "opsz" 96; letter-spacing: -.005em;
+  }
+  h1 .by { display: block; font-weight: 500; font-style: italic; font-size: .62em; margin: .28em 0 .18em; }
+  .fillet { display: block; width: 52%; height: 2px; margin: clamp(10px, 2svh, 16px) auto 0; background: #3a2810; box-shadow: 0 1px 0 rgba(255,241,200,.7); }
+
+  /* ---- The four rows of the intercom ---- */
+  .rows { display: grid; grid-template-rows: repeat(4, 1fr); gap: clamp(8px, 1.6svh, 12px); min-height: 0; }
+  .row {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; text-decoration: none; min-height: 44px;
+  }
+  /* the nameplate: glossy enamel inside a recessed brass frame */
+  .enamel {
+    position: relative; height: 100%; min-height: 44px; border-radius: 8px; overflow: hidden;
+    display: flex; align-items: center; gap: 12px; padding: 0 14px 0 8px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,.06) 46%, rgba(0,0,0,0) 54%, rgba(0,0,0,.18) 100%),
+      var(--e);
+    box-shadow: 0 0 0 3px #b8892f, 0 0 0 4px #5b3f0e, 0 -1px 0 4px rgba(255,240,200,.6), 0 3px 6px rgba(0,0,0,.45) inset;
+    color: #fff8ea;
+  }
+  .enamel::after { /* the enamel reflection, moves with the finger */
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(40% 120% at var(--lx) 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 70%);
+  }
+  .medal {
+    width: clamp(34px, 6.4svh, 46px); height: clamp(34px, 6.4svh, 46px); border-radius: 50%; flex: none; display: grid; place-items: center;
+    background: #fbf3df; box-shadow: 0 0 0 2px #d9ad4f, 0 0 0 3px #6e4c10, 0 2px 3px rgba(0,0,0,.5);
+  }
+  .medal img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .medal img.pad { object-fit: contain; width: 70%; height: 70%; border-radius: 0; }
+  .who { position: relative; display: flex; flex-direction: column; min-width: 0; }
+  .name { font-weight: 700; font-size: clamp(19px, 3.1svh, 24px); line-height: 1; text-shadow: 0 1px 1px rgba(0,0,0,.35); }
+  .word { font-style: italic; font-weight: 500; font-size: clamp(13px, 2svh, 15px); line-height: 1.15; opacity: .9; margin-top: 2px; }
+
+  /* the brass button: it really sinks when pressed */
+  .bell {
+    width: clamp(40px, 7svh, 50px); height: clamp(40px, 7svh, 50px); border-radius: 50%; position: relative; flex: none;
+    background: radial-gradient(circle at 50% 50%, #8f6419 0 38%, transparent 39%),
+                radial-gradient(circle at 40% 32%, #fff2c8 0%, #e8c066 32%, #a77622 70%, #6d4b11 100%);
+    box-shadow: 0 0 0 3px #7a5513, 0 0 0 4px rgba(255,240,200,.55), 0 4px 0 #5b3f0e, 0 7px 10px rgba(0,0,0,.45);
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .bell::after { /* the centre button */
+    content: ""; position: absolute; inset: 26%; border-radius: 50%;
+    background: radial-gradient(circle at 38% 30%, #fff7dc, #e0b553 45%, #94681a 100%);
+    box-shadow: 0 1px 0 rgba(255,245,210,.9) inset, 0 -1px 1px rgba(70,45,8,.6) inset, 0 1px 2px rgba(0,0,0,.4);
+  }
+  .row:active .bell { transform: translateY(3px); box-shadow: 0 0 0 3px #7a5513, 0 0 0 4px rgba(255,240,200,.55), 0 1px 0 #5b3f0e, 0 3px 5px rgba(0,0,0,.4); }
+  .row:active .enamel { filter: brightness(1.08); }
+
+  /* ---- The speaker grille ---- */
+  .grille {
+    justify-self: center; width: 46%; height: clamp(22px, 4.4svh, 34px); border-radius: 999px;
+    background-image: radial-gradient(circle, #2c1d07 0 2.1px, transparent 2.6px);
+    background-size: 10px 10px; background-position: center;
+    box-shadow: 0 1px 0 rgba(255,241,200,.55);
+  }
+
+  @media (max-height: 600px) { .word, .grille { display: none; } .panel { grid-template-rows: auto 1fr; } }
+</style>
+</head>
+<body>
+<main class="stage">
+  <section class="panel">
+    <span class="screw tl" style="--a:28deg"></span><span class="screw tr" style="--a:-41deg"></span>
+    <span class="screw bl" style="--a:66deg"></span><span class="screw br" style="--a:-9deg"></span>
+
+    <h1 class="engraved">Your open space<span class="by">by</span>First Last<span class="fillet"></span></h1>
+
+    <nav class="rows" aria-label="Projects">
+      <a class="row" href="#project-1">
+        <span class="enamel" style="--e:#a63b25"><span class="medal"><img src="../assets/project-1.svg" alt=""></span><span class="who"><span class="name">Project one</span><span class="word">a short line</span></span></span>
+        <span class="bell" aria-hidden="true"></span>
+      </a>
+      <a class="row" href="#project-2">
+        <span class="enamel" style="--e:#c27a12"><span class="medal"><img class="pad" src="../assets/project-2.svg" alt=""></span><span class="who"><span class="name">Project two</span><span class="word">a short line</span></span></span>
+        <span class="bell" aria-hidden="true"></span>
+      </a>
+      <a class="row" href="#project-3">
+        <span class="enamel" style="--e:#173863"><span class="medal"><img class="pad" src="../assets/project-3.svg" alt=""></span><span class="who"><span class="name">Project three</span><span class="word">a short line</span></span></span>
+        <span class="bell" aria-hidden="true"></span>
+      </a>
+      <a class="row" href="#project-4">
+        <span class="enamel" style="--e:#9c2f63"><span class="medal"><img src="../assets/project-4.svg" alt=""></span><span class="who"><span class="name">Project four</span><span class="word">a short line</span></span></span>
+        <span class="bell" aria-hidden="true"></span>
+      </a>
+    </nav>
+
+    <span class="grille" aria-hidden="true"></span>
+  </section>
+</main>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let lx = 40, ly = 20, tlx = 40, tly = 20, touched = false, raf = 0;
+  const t0 = performance.now();
+  const panel = document.querySelector(".panel");
+  function aim(e) {
+    touched = true;
+    const r = panel.getBoundingClientRect();
+    tlx = ((e.clientX - r.left) / r.width) * 100;
+    tly = ((e.clientY - r.top) / r.height) * 100;
+  }
+  addEventListener("pointermove", aim, { passive: true });
+  addEventListener("pointerdown", aim, { passive: true });
+  function tick(now) {
+    if (!touched) {
+      const t = (now - t0) / 1000;
+      tlx = 50 + Math.sin(t * 0.4) * 34;
+      tly = 22 + Math.sin(t * 0.27) * 14;
+    }
+    lx += (tlx - lx) * 0.08; ly += (tly - ly) * 0.08;
+    root.style.setProperty("--lx", lx.toFixed(2) + "%");
+    root.style.setProperty("--ly", ly.toFixed(2) + "%");
+    raf = requestAnimationFrame(tick);
+  }
+  if (!reduce) raf = requestAnimationFrame(tick);
+  document.addEventListener("visibilitychange", () => {
+    cancelAnimationFrame(raf);
+    if (!document.hidden && !reduce) raf = requestAnimationFrame(tick);
+  });
+})();
+</script>
+</body>
+</html>

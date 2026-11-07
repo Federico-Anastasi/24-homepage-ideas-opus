@@ -1,0 +1,269 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title>, the <h1> and the `TITLE` array of the script (all capitals).
+     Projects: in the `DEPS` array of the script (name, line, category, #project-N address).
+     Icons: this version uses no images: the projects are text only.
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 19 · Solari board — the split-flap board of Italian railway stations, with the clock above:
+     the title assembles by flipping, and the four projects are the departures (destination = what it does, flipping now and then in place). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141414">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root { --w: 17px; --h: 26px; --gap: 2px; --ink: #f1f0ea; --yellow: #ffcf33; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0c0c0c; }
+  body { display: flex; justify-content: center; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  .hall {
+    position: relative; width: 100%; max-width: 480px; height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 2.4svh, 22px);
+    padding: max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom));
+    /* the station light from above */
+    background:
+      radial-gradient(90% 45% at 50% -5%, rgba(255, 244, 220, .13), transparent 70%),
+      linear-gradient(#171717, #0e0e0e 60%, #0b0b0b);
+  }
+
+  /* The station clock: real time */
+  .clock { width: clamp(54px, 10svh, 76px); height: auto; flex: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+
+  .board {
+    position: relative; padding: 10px; border-radius: 6px;
+    background: linear-gradient(#101010, #0a0a0a);
+    box-shadow: 0 0 0 1px #2b2b2b, 0 0 0 4px #121212, 0 0 0 5px #2e2e2e, 0 24px 50px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  /* screws at the frame's corners */
+  .board::before, .board::after {
+    content: ""; position: absolute; top: 4px; width: 4px; height: 4px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #6a6a6a, #1b1b1b);
+  }
+  .board::before { left: 4px; } .board::after { right: 4px; }
+
+  .line { display: flex; gap: var(--gap); }
+  .line + .line { margin-top: 3px; }
+  .titleblock { padding-bottom: clamp(10px, 2svh, 16px); margin-bottom: 4px; border-bottom: 1px solid #262626; }
+  .titleblock .f { --ink: var(--yellow); }
+
+  .dep {
+    display: block; text-decoration: none; position: relative;
+    padding: clamp(6px, 1.2svh, 10px) 6px; margin: 0 -6px; border-radius: 4px;
+    transition: background-color .12s ease;
+  }
+  .dep + .dep { border-top: 1px solid #1d1d1d; }
+  .dep:active { background: #1f1f1f; }
+  .dep:active .line:first-child .f { --ink: var(--yellow); }
+  .dep .line:last-child .f { --ink: #c9c8c0; }
+
+  /* The flap: two halves, the fold in the middle, the pivots at the sides */
+  .f {
+    position: relative; width: var(--w); height: var(--h); flex: none;
+    perspective: calc(var(--h) * 5.5);
+    font: 600 calc(var(--h) * .78) / 1 "Barlow Condensed", "Arial Narrow", sans-serif;
+    color: var(--ink);
+  }
+  .f > span {
+    position: absolute; left: 0; right: 0; height: 50%; overflow: hidden;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  }
+  .f > .t, .f > .ft { top: 0; border-radius: 2px 2px 0 0; background: linear-gradient(#2a2a2a, #1d1d1d); transform-origin: 50% 100%; }
+  .f > .b, .f > .fb { bottom: 0; border-radius: 0 0 2px 2px; background: linear-gradient(#1a1a1a, #121212); transform-origin: 50% 0; }
+  .f > .b, .f > .fb { box-shadow: inset 0 1px 0 #000, inset 0 2px 0 rgba(255,255,255,.04); }
+  .f > .ft { z-index: 2; }
+  .f > .fb { z-index: 2; transform: rotateX(90deg); }
+  .f i {
+    position: absolute; left: 0; right: 0; height: var(--h); line-height: var(--h);
+    text-align: center; font-style: normal; text-shadow: 0 0 1px rgba(255,255,255,.15);
+  }
+  .f .t i, .f .ft i { top: 0; }
+  .f .b i, .f .fb i { bottom: 0; }
+  .f::before, .f::after {
+    content: ""; position: absolute; top: calc(50% - 1px); width: 2px; height: 2px; z-index: 3; background: #050505;
+  }
+  .f::before { left: 0; } .f::after { right: 0; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main class="hall">
+  <svg class="clock" viewBox="-50 -50 100 100" aria-hidden="true">
+    <circle r="48" fill="#f4f3ee" stroke="#222" stroke-width="3"/>
+    <g id="ticks"></g>
+    <line id="hh" y2="-24" stroke="#111" stroke-width="5.5" stroke-linecap="butt"/>
+    <line id="mh" y2="-38" stroke="#111" stroke-width="3.6" stroke-linecap="butt"/>
+    <g id="sh"><line y1="12" y2="-42" stroke="#c4161c" stroke-width="1.3"/></g>
+    <circle r="2" fill="#111"/>
+  </svg>
+
+  <div class="board" id="board">
+    <h1 class="sr">Your open space by First Last</h1>
+    <div class="titleblock" id="title" aria-hidden="true"></div>
+    <div id="deps"></div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const COLS = 18;
+  const CHARS = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-·.'";
+  const TITLE = ["YOUR OPEN", "SPACE BY", "FIRST LAST"];
+  const DEPS = [
+    { href: "#project-1", name: "PROJECT ONE", say: "A SHORT LINE", terr: "CATEGORY", label: "Project one: a short line" },
+    { href: "#project-2", name: "PROJECT TWO", say: "A SHORT LINE", terr: "CATEGORY", label: "Project two: a short line" },
+    { href: "#project-3", name: "PROJECT THREE", say: "A SHORT LINE", terr: "CATEGORY", label: "Project three: a short line" },
+    { href: "#project-4", name: "PROJECT FOUR", say: "A SHORT LINE", terr: "CATEGORY", label: "Project four: a short line" },
+  ];
+
+  // ---------- the clock ----------
+  const ticks = document.getElementById("ticks");
+  for (let i = 0; i < 60; i++) {
+    const big = i % 5 === 0, a = i * 6;
+    const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    l.setAttribute("y1", -44); l.setAttribute("y2", big ? -34 : -40);
+    l.setAttribute("stroke", "#111"); l.setAttribute("stroke-width", big ? 3.4 : 1.2);
+    l.setAttribute("transform", `rotate(${a})`);
+    ticks.append(l);
+  }
+  const hh = document.getElementById("hh"), mh = document.getElementById("mh"), sh = document.getElementById("sh");
+  function clock() {
+    const d = new Date(), s = d.getSeconds() + d.getMilliseconds() / 1000;
+    const sec = s;
+    hh.setAttribute("transform", `rotate(${(d.getHours() % 12) * 30 + d.getMinutes() * .5})`);
+    mh.setAttribute("transform", `rotate(${d.getMinutes() * 6})`);
+    sh.setAttribute("transform", `rotate(${sec * 6})`);
+  }
+  clock();
+
+  // ---------- the flaps ----------
+  const cells = [];
+  function makeLine(text) {
+    const line = document.createElement("div");
+    line.className = "line";
+    const list = [];
+    for (let i = 0; i < COLS; i++) {
+      const f = document.createElement("span");
+      f.className = "f";
+      f.innerHTML = '<span class="t"><i></i></span><span class="b"><i></i></span><span class="ft"><i></i></span><span class="fb"><i></i></span>';
+      const [t, b, ft, fb] = [...f.children].map((x) => x.firstChild);
+      const cell = { f, t, b, ft, fb, ftEl: f.children[2], fbEl: f.children[3], cur: " ", queue: [], busy: false };
+      list.push(cell); cells.push(cell);
+      line.append(f);
+    }
+    line.cells = list;
+    return line;
+  }
+  const pad = (s) => (s + " ".repeat(COLS)).slice(0, COLS);
+
+  // One flap turn: the upper half falls, the new lower half rises.
+  function flip(cell, next) {
+    return new Promise((done) => {
+      const cur = cell.cur;
+      cell.t.textContent = next; cell.b.textContent = cur;
+      cell.ft.textContent = cur; cell.fb.textContent = next;
+      const a = cell.ftEl.animate(
+        [{ transform: "rotateX(0deg)", filter: "brightness(1)" }, { transform: "rotateX(-90deg)", filter: "brightness(.45)" }],
+        { duration: 46, easing: "cubic-bezier(.55,0,1,.45)", fill: "forwards" });
+      a.onfinish = () => {
+        const bAnim = cell.fbEl.animate(
+          [{ transform: "rotateX(90deg)", filter: "brightness(.6)" }, { transform: "rotateX(0deg)", filter: "brightness(1)" }],
+          { duration: 52, easing: "cubic-bezier(0,.55,.45,1)", fill: "forwards" });
+        bAnim.onfinish = () => {
+          cell.b.textContent = next; cell.ft.textContent = next;
+          a.cancel(); bAnim.cancel();
+          cell.cur = next;
+          done();
+        };
+      };
+    });
+  }
+  function set(cell, ch) { cell.cur = ch; cell.t.textContent = cell.b.textContent = cell.ft.textContent = cell.fb.textContent = ch; }
+
+  // Towards the right character via a few letters first, as real flaps do.
+  async function spin(cell, target, extra, delay) {
+    if (reduce) { set(cell, target); return; }
+    const token = (cell.token = (cell.token || 0) + 1);
+    await new Promise((r) => setTimeout(r, delay));
+    const ti = CHARS.indexOf(target) < 0 ? 0 : CHARS.indexOf(target);
+    const seq = [];
+    if (target !== cell.cur) {
+      for (let k = extra; k >= 1; k--) seq.push(CHARS[(ti - k + CHARS.length) % CHARS.length]);
+      seq.push(target);
+    }
+    for (const ch of seq) {
+      if (cell.token !== token) return;
+      if (document.hidden) { set(cell, target); return; }
+      await flip(cell, ch);
+      await new Promise((r) => setTimeout(r, 8));
+    }
+  }
+  function show(line, text, baseDelay, spread = 9) {
+    const t = pad(text);
+    line.cells.forEach((c, i) => {
+      const extra = t[i] === " " && c.cur === " " ? 0 : 2 + Math.floor(Math.random() * spread);
+      spin(c, t[i], extra, baseDelay + i * 22 + Math.random() * 90);
+    });
+  }
+
+  const titleEl = document.getElementById("title");
+  const titleLines = TITLE.map(() => { const l = makeLine(); titleEl.append(l); return l; });
+  const depsEl = document.getElementById("deps");
+  const depLines = DEPS.map((d) => {
+    const a = document.createElement("a");
+    a.className = "dep"; a.href = d.href; a.setAttribute("aria-label", d.label);
+    const l1 = makeLine(), l2 = makeLine();
+    a.append(l1, l2);
+    depsEl.append(a);
+    return [l1, l2];
+  });
+
+  // ---------- measures: the flaps fill the phone without overflowing ----------
+  function size() {
+    const hall = document.querySelector(".hall");
+    const W = Math.min(innerWidth, 480) - 28 - 20;
+    const gap = W > 380 ? 3 : 2;
+    let w = Math.floor((W - (COLS - 1) * gap) / COLS);
+    const clockH = document.querySelector(".clock").getBoundingClientRect().height;
+    const cs = getComputedStyle(hall);
+    const avail = innerHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - clockH - parseFloat(cs.gap) - 20 - 26 - 4 * 18;
+    let h = Math.min(Math.round(w * 1.55), Math.floor(avail / 11) - 3);
+    if (h < w * 1.2) { h = Math.floor(avail / 11) - 3; w = Math.min(w, Math.floor(h / 1.2)); }
+    document.documentElement.style.setProperty("--w", w + "px");
+    document.documentElement.style.setProperty("--h", h + "px");
+    document.documentElement.style.setProperty("--gap", gap + "px");
+  }
+  size();
+  addEventListener("resize", size);
+
+  // ---------- start-up: everything spins and assembles ----------
+  const go = () => {
+    TITLE.forEach((t, i) => show(titleLines[i], t, i * 120));
+    DEPS.forEach((d, i) => { show(depLines[i][0], d.name, 380 + i * 140); show(depLines[i][1], d.say, 460 + i * 140); });
+  };
+  (document.fonts ? Promise.race([document.fonts.load("600 20px 'Barlow Condensed'"), new Promise((r) => setTimeout(r, 1200))]) : Promise.resolve()).then(go);
+
+  if (reduce) return;
+
+  // the clock ticks; now and then a departure flips in place and then goes back
+  let raf;
+  const tick = () => { clock(); raf = requestAnimationFrame(tick); };
+  raf = requestAnimationFrame(tick);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) cancelAnimationFrame(raf); else raf = requestAnimationFrame(tick); });
+
+  let k = 0;
+  setInterval(() => {
+    if (document.hidden) return;
+    const i = k++ % DEPS.length, line = depLines[i][1];
+    show(line, DEPS[i].terr, 0, 5);
+    setTimeout(() => show(line, DEPS[i].say, 0, 5), 3400);
+  }, 5200);
+})();
+</script>
+</body>
+</html>

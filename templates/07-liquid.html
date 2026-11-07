@@ -1,0 +1,150 @@
+<!doctype html>
+<!-- HOW TO USE (this page is a template)
+     Title: in the <title> and the <h1> (search for "Your open space" and "First Last").
+     Projects: in the four <a> links of this page (name, short line and #project-N address).
+     Icons: the four files ../assets/project-1.svg ... project-4.svg (replace them, or change the src of the <img> tags).
+     Also replace the #project-1 ... #project-4 links with the addresses of your own projects. -->
+<!-- 07 · Liquid — four droplets, one per project, drifting slowly, touching, merging and separating (metaballs with an SVG filter).
+     The finger acts as a fifth droplet and pulls the others toward it. The title stays still and sharp above the liquid. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0b10">
+<title>Your open space by First Last</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0c0b10; --font: "Familjen Grotesk", -apple-system, sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: #fff; }
+  body { font-family: var(--font); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  .stage { position: fixed; inset: 0; margin: 0 auto; max-width: 480px; touch-action: none; user-select: none; -webkit-user-select: none; }
+  h1 {
+    position: absolute; z-index: 3; left: 20px; right: 20px; top: max(22px, env(safe-area-inset-top)); margin: 0;
+    font-weight: 700; font-size: clamp(36px, 6.8svh, 50px); line-height: .96; letter-spacing: -.03em; pointer-events: none;
+  }
+  h1 span { color: rgba(255, 255, 255, .55); }
+  svg.goo { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
+  /* Light sliding over the liquid: a fixed highlight above the droplets */
+  .sheen { position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: soft-light;
+           background: radial-gradient(70% 45% at 30% 30%, rgba(255, 255, 255, .5), transparent 60%); }
+  .drop {
+    position: absolute; z-index: 4; left: 0; top: 0; width: 132px; margin: -46px 0 0 -66px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+    text-decoration: none; color: #fff; will-change: transform; padding: 6px 0;
+  }
+  .drop img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 6px 18px rgba(0, 0, 0, .3); transition: transform .2s ease; }
+  .drop img.flat { object-fit: contain; background: #fff; padding: 8px; }
+  .drop .name { font-weight: 700; font-size: 17px; line-height: 1.05; letter-spacing: -.01em; text-shadow: 0 1px 10px rgba(0, 0, 0, .25); }
+  .drop .say { font-weight: 500; font-size: 13px; opacity: .86; margin-top: -3px; }
+  .drop:active img { transform: scale(.9); }
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <h1>Your open space <span>by First Last</span></h1>
+  <svg class="goo" id="svg" aria-hidden="true">
+    <defs>
+      <filter id="goo" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b"/>
+        <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="g"/>
+        <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+      </filter>
+      <radialGradient id="g0" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#6f8dff"/><stop offset="1" stop-color="#2238a8"/></radialGradient>
+      <radialGradient id="g1" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ffd45c"/><stop offset="1" stop-color="#ff9a10"/></radialGradient>
+      <radialGradient id="g2" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ff8a6b"/><stop offset="1" stop-color="#e8402c"/></radialGradient>
+      <radialGradient id="g3" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#ff9fd0"/><stop offset="1" stop-color="#e2459b"/></radialGradient>
+      <radialGradient id="gf" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd3e6"/></radialGradient>
+    </defs>
+    <g filter="url(#goo)" id="blobs"></g>
+  </svg>
+  <div class="sheen" aria-hidden="true"></div>
+  <a class="drop" href="#project-1"><img src="../assets/project-1.svg" alt=""><span class="name">Project one</span><span class="say">a short line</span></a>
+  <a class="drop" href="#project-2"><img class="flat" src="../assets/project-2.svg" alt=""><span class="name">Project two</span><span class="say">a short line</span></a>
+  <a class="drop" href="#project-3"><img class="flat" src="../assets/project-3.svg" alt=""><span class="name">Project three</span><span class="say">a short line</span></a>
+  <a class="drop" href="#project-4"><img src="../assets/project-4.svg" alt=""><span class="name">Project four</span><span class="say">a short line</span></a>
+</main>
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg";
+  const stage = document.getElementById("stage");
+  const group = document.getElementById("blobs");
+  const labels = [...document.querySelectorAll(".drop")];
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Home position of each droplet (as fractions of the area below the title), radius, colour, own rhythm.
+  const homes = [[0.30, 0.18], [0.72, 0.40], [0.28, 0.62], [0.70, 0.85]];
+  const drops = homes.map(([hx, hy], i) => ({
+    hx, hy, x: 0, y: 0, vx: 0, vy: 0, r: 58 + (i % 2) * 6,
+    fa: 0.11 + i * 0.023, fb: 0.083 + i * 0.019, ph: i * 1.7,
+    el: Object.assign(document.createElementNS(NS, "circle"), {}),
+  }));
+  drops.forEach((d, i) => { d.el.setAttribute("fill", `url(#g${i})`); group.append(d.el); });
+  // Satellite droplets: they detach and reattach, bringing the liquid to life
+  const bits = Array.from({ length: 7 }, (_, i) => ({ host: i % 4, a: i * 0.9, s: 0.25 + (i % 3) * 0.07, r: 13 + (i % 3) * 5, el: document.createElementNS(NS, "circle") }));
+  bits.forEach((b) => { b.el.setAttribute("fill", `url(#g${b.host})`); group.append(b.el); });
+  const finger = { x: -999, y: -999, r: 0, on: false, el: document.createElementNS(NS, "circle") };
+  finger.el.setAttribute("fill", "url(#gf)");
+  group.append(finger.el);
+
+  let W = 0, H = 0, top = 0;
+  const fit = () => {
+    const r = stage.getBoundingClientRect(); W = r.width; H = r.height;
+    const h1 = stage.querySelector("h1").getBoundingClientRect();
+    top = h1.bottom - r.top + 34;
+    const scale = Math.min(1, Math.max(0.78, Math.min(W / 393, H / 659)));
+    drops.forEach((d, i) => { d.R = (58 + (i % 2) * 6) * scale; });
+  };
+  const home = (d) => [26 + d.hx * (W - 52), top + d.hy * (H - top - 70)];
+  fit();
+  drops.forEach((d) => { [d.x, d.y] = home(d); });
+  addEventListener("resize", () => { fit(); });
+
+  const point = (e) => { const r = stage.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  stage.addEventListener("pointerdown", (e) => { [finger.x, finger.y] = point(e); finger.on = true; });
+  stage.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" || finger.on) { [finger.x, finger.y] = point(e); finger.on = true; } });
+  const up = () => { finger.on = false; };
+  stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up); stage.addEventListener("pointerleave", up);
+
+  let raf = 0, last = performance.now(), t = 0;
+  const step = (now) => {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    finger.r += ((finger.on ? 34 : 0) - finger.r) * Math.min(1, dt * 8);
+    drops.forEach((d, i) => {
+      const [hx, hy] = home(d);
+      // slow drift around home (Lissajous curves) and radius breathing
+      const tx = hx + Math.sin(t * d.fa * 6.283 + d.ph) * 34;
+      const ty = hy + Math.cos(t * d.fb * 6.283 + d.ph * 0.7) * 26;
+      let ax = (tx - d.x) * 3.2, ay = (ty - d.y) * 3.2;
+      if (finger.r > 2) { // the finger attracts nearby droplets
+        const dx = finger.x - d.x, dy = finger.y - d.y, dist = Math.hypot(dx, dy) || 1;
+        const pull = Math.max(0, 1 - dist / 220) * 26;
+        ax += dx / dist * pull * 9; ay += dy / dist * pull * 9;
+      }
+      d.vx = (d.vx + ax * dt) * Math.pow(0.12, dt); d.vy = (d.vy + ay * dt) * Math.pow(0.12, dt);
+      d.x += d.vx * dt; d.y += d.vy * dt;
+      const rr = d.R * (1 + 0.06 * Math.sin(t * 0.9 + i));
+      d.el.setAttribute("cx", d.x.toFixed(1)); d.el.setAttribute("cy", d.y.toFixed(1)); d.el.setAttribute("r", rr.toFixed(1));
+      labels[i].style.transform = `translate(${d.x.toFixed(1)}px, ${d.y.toFixed(1)}px)`;
+    });
+    bits.forEach((b) => { // they orbit and drift away, then come back in
+      const h = drops[b.host]; const a = b.a + t * b.s;
+      const out = h.R * (0.7 + 0.75 * (0.5 + 0.5 * Math.sin(t * 0.6 + b.a * 2)));
+      b.el.setAttribute("cx", (h.x + Math.cos(a) * out).toFixed(1));
+      b.el.setAttribute("cy", (h.y + Math.sin(a) * out).toFixed(1));
+      b.el.setAttribute("r", b.r);
+    });
+    finger.el.setAttribute("cx", finger.x.toFixed(1)); finger.el.setAttribute("cy", finger.y.toFixed(1)); finger.el.setAttribute("r", Math.max(0, finger.r).toFixed(1));
+    if (!still) raf = requestAnimationFrame(step);
+  };
+  step(last);
+  document.addEventListener("visibilitychange", () => {
+    cancelAnimationFrame(raf);
+    if (!document.hidden && !still) { last = performance.now(); raf = requestAnimationFrame(step); }
+  });
+})();
+</script>
+</body>
+</html>
