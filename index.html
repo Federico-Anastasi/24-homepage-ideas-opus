@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>24 home page: template aperti</title>
+<title>23 home pages: open templates</title>
 <style>
   body { margin: 0; background: #1c1c1f; color: #eee; font: 500 14px/1.4 system-ui, -apple-system, sans-serif; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, 393px); gap: 40px 32px; justify-content: center; padding: 32px 20px 80px; }
@@ -12,7 +12,7 @@
   figcaption a { color: #ffb21e; text-decoration: none; }
   .phone { width: 393px; height: 659px; border-radius: 38px; overflow: hidden; background: #000; box-shadow: 0 0 0 8px #0b0b0c, 0 0 0 9px #333; }
   iframe { width: 393px; height: 659px; border: 0; display: block; }
-  /* Sul telefono: un elenco da toccare, ogni versione si apre a tutto schermo */
+  /* On a phone: a list to tap, each version opens full screen */
   @media (max-width: 600px) {
     .grid { display: block; padding: 16px; }
     figure { margin: 0 0 4px; }
@@ -25,21 +25,21 @@
 <div class="grid" id="grid"></div>
 <script>
 const V = [
-  "01-manifesto", "02-risograph", "03-bauhaus", "04-carta",
-  "05-aurora", "06-grana-calda", "07-liquido", "08-campo",
-  "09-cromo-liquido", "10-alluminio", "11-ottone", "12-titolo-cromato",
-  "13-insegne", "14-olografico", "15-vetro-acidato", "16-oscilloscopio",
-  "17-terminale", "18-led", "19-solari", "20-televideo",
-  "21-oggetti", "22-diorama", "23-particelle", "24-acrilico",
+  "01-manifesto", "02-risograph", "03-bauhaus", "04-paper",
+  "05-aurora", "06-warm-grain", "07-liquid", "09-liquid-chrome",
+  "10-brushed-aluminium", "11-brass", "12-chrome-title", "13-neon-signs",
+  "14-holographic", "15-frosted-glass", "16-oscilloscope", "17-terminal",
+  "18-led-matrix", "19-split-flap", "20-teletext", "21-objects",
+  "22-diorama", "23-particles", "24-acrylic",
 ];
 const grid = document.getElementById("grid");
 for (const v of V) {
   const name = v.replace(/^\d+-/, "").replace(/-/g, " ");
   grid.insertAdjacentHTML("beforeend",
-    `<figure><figcaption><span>${v.slice(0, 2)} · ${name}</span><a href="template/${v}.html" target="_blank">apri ↗</a></figcaption>
-     <div class="phone"><iframe data-src="template/${v}.html" title="${name}"></iframe></div></figure>`);
+    `<figure><figcaption><span>${v.slice(0, 2)} · ${name}</span><a href="templates/${v}.html" target="_blank">open ↗</a></figcaption>
+     <div class="phone"><iframe data-src="templates/${v}.html" title="${name}"></iframe></div></figure>`);
 }
-// Carica solo le versioni vicine allo schermo e scarica le altre: il browser regge poche scene 3D insieme.
+// Load only the pages near the screen and unload the others: the browser can only handle a few 3D scenes at once.
 const io = new IntersectionObserver((entries) => {
   for (const e of entries) {
     const f = e.target;
